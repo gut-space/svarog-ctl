@@ -2,7 +2,7 @@ import os
 import shutil
 import yaml
 
-from utils.globalvars import CONFIG_PATH
+from .globalvars import CONFIG_PATH
 
 
 def open_config():

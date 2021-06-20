@@ -11,9 +11,9 @@ from orbit_predictor.predictors.base import CartesianPredictor
 
 from svarog_ctl.tle import tle
 
-from utils.globalvars import CONFIG_DIRECTORY, APP_NAME, VERSION
-from utils.configuration import open_config
-from utils.utils import url_to_filename
+from .globalvars import CONFIG_DIRECTORY, APP_NAME, VERSION
+from .configuration import open_config
+from .utils import url_to_filename
 
 
 CELESTRAK = [

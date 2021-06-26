@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from dateutil import tz
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
-from svarog_ctl.orbitdb import OrbitDatabase
+from svarog_ctl import orbitdb
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -29,7 +29,7 @@ def main():
        call get_pass (which will return a list of az,el positions over time),
        then print it."""
 
-    db = OrbitDatabase()
+    db = orbitdb.OrbitDatabase()
     pred = db.get_predictor('NOAA 18')
 
     OBSERVER_NAME = 'Gdansk'

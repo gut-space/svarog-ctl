@@ -1,11 +1,19 @@
+"""
+Class representing TLE
+"""
 
 class tle():
+    """
+    TLE class represents a TLE, Two Line Element that describes an Earth orbit.
+    See https://en.wikipedia.org/wiki/Two-line_element_set
+    """
     def __init__(self, line1: str, line2: str, line0: str = ""):
-        self.setLine1(line1)
-        self.setLine2(line2)
+        self.set_line1(line1)
+        self.set_line2(line2)
         self.name = line0
 
-    def setLine1(self, line: str) -> str:
+    def set_line1(self, line: str) -> str:
+        """Sets the first line out of two"""
         # @todo: Add sanity checks for line 1
         tokens = line.split()
         if len(tokens) != 9:
@@ -17,7 +25,8 @@ class tle():
 
         self.line1 = line
 
-    def setLine2(self, line: str) -> str:
+    def set_line2(self, line: str) -> str:
+        """Sets the second line out of two"""
         # @todo: Add sanity checks for line 2
         self.line2 = line
 

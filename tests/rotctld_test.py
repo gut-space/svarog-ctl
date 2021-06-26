@@ -14,4 +14,4 @@ def test_connected():
     r = Rotctld("127.0.0.1", 4533)
 
     # This is clearly broken. It's supposed to be False before connect is called.
-    assert r.connected() == True
+    assert r.connected() == False

@@ -19,4 +19,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint `ls *.py svarog_ctl/*.py|grep .py$|xargs`
+        pylint --rcfile .pylint `ls *.py svarog_ctl/*.py|grep .py$|xargs`

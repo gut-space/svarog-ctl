@@ -59,7 +59,7 @@ class Rotctld:
     def send_command(self, cmd: str):
         """ Send a command to the connected rotctld instance,
             and return the return value. """
-        if (cmd and len(cmd) and cmd[-1] != '\n'):
+        if (cmd and len(cmd)>0 and cmd[-1] != '\n'):
             cmd_safe = cmd + '\n'
         else:
             cmd_safe = cmd
@@ -115,8 +115,8 @@ class Rotctld:
             az = float(resp_split[0])
             el = float(resp_split[1])
             return az, el
-        except:
-            logging.error("Could not parse position: %s", resp)
+        except IndexError as e:
+            logging.error("Could not parse position: %s: %s", resp, e)
             return None, None
 
     def stop(self):

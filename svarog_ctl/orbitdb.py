@@ -1,27 +1,46 @@
+"""
+OrbitDatabase is responsible for downloading and maintaining TLE orbital data.
+"""
+
 import datetime
 import logging
 import os
-from typing import List, Sequence
+import time
 import requests
 import requests.exceptions
-import time
 
 from orbit_predictor.sources import NoradTLESource
 from orbit_predictor.predictors.base import CartesianPredictor
 
 from svarog_ctl.tle import tle
 
-from .globalvars import CONFIG_DIRECTORY, APP_NAME, VERSION
+from .globalvars import APP_NAME, VERSION
 from .configuration import open_config
 from .utils import url_to_filename
 
-
 CELESTRAK = [
-    r"https://celestrak.com/NORAD/elements/active.txt",
+    "https://celestrak.com/NORAD/elements/active.txt",
     "file://local.txt"
 ]
 
+def _get_create_time(path):
+    stat = os.stat(path)
+    ctime = stat.st_ctime
+    return ctime
+
+def _is_in_source(source, sat_id):
+    try:
+        source.get_tle(sat_id, datetime.datetime.utcnow())
+        return True
+    except LookupError:
+        return False
+
 class OrbitDatabase:
+    """
+    OrbitDatabase is a simple database that downloads TLE orbital data from
+    configurable Internet sources and local files.
+    """
+
     def __init__(self, urls=None, max_period=7*24*60*60):
         self.max_period = max_period
         if urls is None:
@@ -33,18 +52,18 @@ class OrbitDatabase:
 
         # Store all information in the ${DATADIR}/tle directory.
         cfg = open_config()
-        logging.debug("Loaded config: %s" % repr(cfg))
+        logging.debug("Loaded config: %s", repr(cfg))
         self.datadir = os.path.join(cfg['datadir'], 'tle')
 
     def _get_tle_from_url(self, url):
-        if (url[:7] == "file://"):
+        if url[:7] == "file://":
             fname = self.datadir + os.path.sep + url[7:]
-            logging.debug("Reading file [%s]" % fname)
+            logging.debug("Reading file [%s]", fname)
 
             with open(fname, "r") as f:
                 content = f.read()
                 f.close()
-                logging.debug("Loaded %d bytes from file %s" % (len(content), fname))
+                logging.debug("Loaded %d bytes from file %s", len(content), fname)
                 return content
 
         headers = { 'user-agent': APP_NAME + " " + VERSION, 'Accept': 'text/plain' }
@@ -56,7 +75,7 @@ class OrbitDatabase:
         return response.content.decode("UTF-8")
 
     def _fetch_tle_and_save(self, url, tle_path):
-        logging.info("Downloading %s to local file %s" % (url, tle_path))
+        logging.info("Downloading %s to local file %s", url, tle_path)
 
         content = self._get_tle_from_url(url)
         with open(tle_path, "w") as f:
@@ -69,13 +88,8 @@ class OrbitDatabase:
         tle_path = os.path.join(self.datadir, tle_filename)
         return tle_path
 
-    def _get_create_time(self, path):
-        stat = os.stat(path)
-        ctime = stat.st_ctime
-        return ctime
-
     def _is_out_of_date(self, path):
-        ctime = self._get_create_time(path)
+        ctime = _get_create_time(path)
         now = time.time()
         return now > ctime + self.max_period
 
@@ -83,7 +97,7 @@ class OrbitDatabase:
         tle_path = self._get_tle_path_from_url(url)
         tle_path_exists = os.path.exists(tle_path)
         if not force_fetch and tle_path_exists and not self._is_out_of_date(tle_path):
-            logging.info("%s is up-to-date, skipping download." % tle_path)
+            logging.info("%s is up-to-date, skipping download.", tle_path)
             return tle_path
 
         try:
@@ -91,25 +105,19 @@ class OrbitDatabase:
         except:
             if not force_fetch and tle_path_exists:
                 return tle_path
-            else:
-                raise
+            raise
 
-    def _is_in_source(self, source, sat_id):
-        try:
-            source.get_tle(sat_id, datetime.datetime.utcnow())
-            return True
-        except LookupError:
-            return False
-
-    def get_predictor(self, sat_id) -> CartesianPredictor:
+    def get_predictor(self, sat_id: int) -> CartesianPredictor:
+        """Returns a prediction for specified satellite"""
         for url in self.urls:
             path = self._get_current_tle_file(url)
             source = NoradTLESource.from_file(path)
-            if self._is_in_source(source, sat_id):
+            if _is_in_source(source, sat_id):
                 return source.get_predictor(sat_id)
-        raise LookupError("Could not find %s in orbit data." % (sat_id,))
+        raise LookupError("Could not find %s in orbit data." % sat_id)
 
     def refresh_satellites(self, sat_ids):
+        """Refresh satellite info from remote sources and local files."""
         all_sat_ids = set(sat_ids)
         found_sat_ids = set()
         for url in self.urls:
@@ -121,14 +129,15 @@ class OrbitDatabase:
             source = NoradTLESource.from_file(path)
 
             for sat_id in sats_to_search:
-                if self._is_in_source(source, sat_id):
+                if _is_in_source(source, sat_id):
                     found_sat_ids.add(sat_id)
 
         if all_sat_ids != found_sat_ids:
-            raise LookupError("Could not find %s in orbit data." % (", ".join(all_sat_ids.difference(found_sat_ids))))
+            raise LookupError("Could not find %s in orbit data." %
+                (", ".join(all_sat_ids.difference(found_sat_ids))))
 
     def refresh_urls(self, force_fetch = False):
-        """Downloads all defined TLE information from Celestrak and other defined sources"""
+        """Downloads all defined TLE information from Celestrak and other defined sources."""
         urls = self.urls
 
         for url in urls:
@@ -136,6 +145,7 @@ class OrbitDatabase:
             self.parse_tlebulk(self._get_tle_path_from_url(url))
 
     def parse_all(self):
+        """Parses all files."""
         for url in self.urls:
             path = self._get_current_tle_file(url)
             self.parse_tlebulk(path)
@@ -155,7 +165,7 @@ class OrbitDatabase:
             self.tle_names[name] = t
             self.tle_norad[t.norad] = t
             cnt += 1
-        logging.info("Loaded %d TLEs." % cnt)
+        logging.info("Loaded %d TLEs.", cnt)
 
     def get_name(self, l: str) -> tle:
         """Attempts to return a TLE by its name, e.g. get_name("NOAA 18") """
@@ -175,15 +185,15 @@ class OrbitDatabase:
         for url in self.urls:
             path = self._get_tle_path_from_url(url)
             exists = os.path.exists(path)
-            logging.debug("DEBUG: path=%s, url=%s" % (path, url) )
             if exists:
                 out_of_date = self._is_out_of_date(path)
-                creation_time = self._get_create_time(path)
+                creation_time = _get_create_time(path)
                 now = time.time()
                 age = now - creation_time
 
                 dt = datetime.timedelta(seconds=age)
-                data.append((url, "%s: %s ago" % ("Out-of-date" if out_of_date else "Current", str(dt))))
+                data.append((url, "%s: %s ago" % ("Out-of-date" if out_of_date
+                                                                else "Current", str(dt))))
             else:
                 data.append((url, "Not exists"))
 

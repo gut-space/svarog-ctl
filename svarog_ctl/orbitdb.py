@@ -14,13 +14,13 @@ from orbit_predictor.predictors.base import CartesianPredictor
 
 from svarog_ctl.tle import tle
 
-from .globalvars import APP_NAME, VERSION
+from .globalvars import APP_NAME, VERSION, CONFIG_DIRECTORY
 from .configuration import open_config
 from .utils import url_to_filename
 
-CELESTRAK = [
-    "https://celestrak.com/NORAD/elements/active.txt",
-    "file://local.txt"
+TLE_SOURCES = [
+    "https://celestrak.com/NORAD/elements/active.txt" # Can be an url
+    # "file://local.txt" # can also be a local file
 ]
 
 def _get_create_time(path):
@@ -44,7 +44,7 @@ class OrbitDatabase:
     def __init__(self, urls=None, max_period=7*24*60*60):
         self.max_period = max_period
         if urls is None:
-            urls = CELESTRAK
+            urls = TLE_SOURCES
         self.urls = urls
 
         self.tle_names = {}
@@ -53,7 +53,8 @@ class OrbitDatabase:
         # Store all information in the ${DATADIR}/tle directory.
         cfg = open_config()
         logging.debug("Loaded config: %s", repr(cfg))
-        self.datadir = os.path.join(cfg['datadir'] if 'datadir' in cfg else 'data', 'tle')
+        self.datadir = os.path.join(cfg['datadir'] if 'datadir' in cfg else CONFIG_DIRECTORY, 'tle')
+        os.makedirs(self.datadir, exist_ok = True)
 
     def _get_tle_from_url(self, url):
         if url[:7] == "file://":
@@ -137,7 +138,7 @@ class OrbitDatabase:
                 (", ".join(all_sat_ids.difference(found_sat_ids))))
 
     def refresh_urls(self, force_fetch = False):
-        """Downloads all defined TLE information from Celestrak and other defined sources."""
+        """Downloads all defined TLE information from TLE_SOURCES and other defined sources."""
         urls = self.urls
 
         for url in urls:
@@ -151,7 +152,7 @@ class OrbitDatabase:
             self.parse_tlebulk(path)
 
     def parse_tlebulk(self, file: str = None):
-        """Parses loaded TLE data, as downloaded from CELESTRAK. The file is essentially a
+        """Parses loaded TLE data, as downloaded from TLE_SOURCES. The file is essentially a
            lot of TLE lines concatenated together."""
 
         cnt = 0

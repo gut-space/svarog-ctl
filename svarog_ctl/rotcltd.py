@@ -1,15 +1,18 @@
-# rotctld - python 3 interface to rotctld
-#
-# This is roughly based on Mark Jessop's code, which is available here:
-# https://github.com/darksidelemm/rotctld-web-gui/blob/master/rotatorgui.py
-#
-# Author: Tomek Mrugalski
-# License: MIT
+"""
+rotctld - python 3 interface to rotctld
 
-import  socket
+This is roughly based on Mark Jessop's code, which is available here:
+https://github.com/darksidelemm/rotctld-web-gui/blob/master/rotatorgui.py
+
+Author: Tomek Mrugalski
+License: MIT
+"""
+
+import socket
+from socket import AF_INET, SOCK_STREAM
 import logging
 
-class rotctld:
+class Rotctld:
     """ This is python 3 interface to the rotator controler rotctld, part of the excellent
         hamlib library. This class uses python logging."""
 
@@ -28,7 +31,7 @@ class rotctld:
 
         # There's no easy way to sanity check the hostname, as it could be IPv4, IPv6,
         # a hostname or even a FQDN
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(AF_INET, SOCK_STREAM)
         self.sock.settimeout(timeout)
         self._hostname = hostname
         self._port = port
@@ -43,12 +46,11 @@ class rotctld:
             it returns the rotator model as a string. """
         self.sock.connect((self._hostname,self._port))
         model = self.get_model()
-        if model == None:
+        if model is None:
             # Timeout!
             self.close()
             raise Exception("Timeout!")
-        else:
-            return model
+        return model
 
     def close(self):
         """ Closes the connection. """
@@ -57,7 +59,7 @@ class rotctld:
     def send_command(self, cmd: str):
         """ Send a command to the connected rotctld instance,
             and return the return value. """
-        if (len(cmd) and cmd[-1] != '\n'):
+        if (cmd and len(cmd) and cmd[-1] != '\n'):
             cmd_safe = cmd + '\n'
         else:
             cmd_safe = cmd
@@ -68,13 +70,13 @@ class rotctld:
             resp = resp.decode().strip()
 
         resp_txt = resp.replace("\n"," ")
-        logging.info("Sent command [%s], received response [%s]" % (cmd, resp_txt))
+        logging.info("Sent command [%s], received response [%s]", cmd, resp_txt)
         return resp
 
     def get_model(self):
         """ Get the rotator model from rotctld """
         model = self.send_command("_")
-        logging.info("Rotator model reported as %s" % model)
+        logging.info("Rotator model reported as %s", model)
         return model
 
     def set_pos(self,azimuth : float,elevation : float):
@@ -96,12 +98,11 @@ class rotctld:
         azimuth = azimuth % 360.0
 
         command = "P %3.1f %2.1f" % (azimuth,elevation)
-        logging.info("Setting position to %s" % command)
+        logging.info("Setting position to %s", command)
         resp = self.send_command(command)
         if "RPRT 0" in resp:
             return True, resp
-        else:
-            return False, resp
+        return False, resp
 
     def get_pos(self):
         """ Returns the antenna position. Returns a tuple: azimuth and elevation """
@@ -115,8 +116,9 @@ class rotctld:
             el = float(resp_split[1])
             return az, el
         except:
-            logging.error("Could not parse position: %s" % resp)
+            logging.error("Could not parse position: %s", resp)
             return None, None
 
     def stop(self):
-    	self.send_command('S')
+        """ Tells the rotator to stop rotating immediately."""
+        self.send_command('S')

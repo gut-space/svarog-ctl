@@ -5,4 +5,4 @@ that uses `rotctld` to control antenna rotors to track satellites fly overs.
 
 ## Status
 
-The software was just stared, it doesn't work yet.
+The software is in early development. It's not functional yet.

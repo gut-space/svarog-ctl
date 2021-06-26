@@ -44,7 +44,9 @@ try:
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f) # type: ignore
         LOG_FILE = os.path.expanduser(config["logging"]["file"])
-except IOError:
+except IOError: # file not found, we don't care
+    pass
+except KeyError: # file found, but doesn't have logging/file key. We still don't care
     pass
 
 if LOG_FILE == "stdout":

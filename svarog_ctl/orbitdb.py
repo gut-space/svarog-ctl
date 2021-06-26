@@ -53,7 +53,7 @@ class OrbitDatabase:
         # Store all information in the ${DATADIR}/tle directory.
         cfg = open_config()
         logging.debug("Loaded config: %s", repr(cfg))
-        self.datadir = os.path.join(cfg['datadir'], 'tle')
+        self.datadir = os.path.join(cfg['datadir'] if 'datadir' in cfg else 'data', 'tle')
 
     def _get_tle_from_url(self, url):
         if url[:7] == "file://":

@@ -39,7 +39,7 @@ class Rotctld:
 
     def connected(self) -> bool:
         """ Returns the status of the connection. """
-        return not self.sock._closed
+        return self._connected
 
     def connect(self) -> str:
         """ Attempts to connect to rotctld. If the connection is established,
@@ -50,11 +50,13 @@ class Rotctld:
             # Timeout!
             self.close()
             raise Exception("Timeout!")
+        self._connected = True
         return model
 
     def close(self):
         """ Closes the connection. """
         self.sock.close()
+        self._connected = False
 
     def send_command(self, cmd: str):
         """ Send a command to the connected rotctld instance,

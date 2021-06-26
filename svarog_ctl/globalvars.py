@@ -36,7 +36,7 @@ try:
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f) # type: ignore
         lv = config["logging"]["level"]
-        LOGLEVEL = logging._nameToLevel[lv]
+        LOGLEVEL = logging._nameToLevel[lv] # pylint: disable=protected-access
 except IOError:
     pass
 

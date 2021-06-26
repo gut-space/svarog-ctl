@@ -1,24 +1,31 @@
-def coords(lon, lat):
-    t = "%2.4f%s" % (lat, "N" if lat else "S")
+"""
+A collection of random utility functions.
+"""
 
-    t += " %2.4f" % lon
-    if (lon>0):
-        t += "E"
+def coords(lon: float, lat: float):
+    """Turn longitude, latitude into a printable string."""
+    txt = "%2.4f%s" % (lat, "N" if lat else "S")
+
+    txt += " %2.4f" % lon
+    if lon > 0:
+        txt += "E"
     else:
-        t += "W"
-    return t
+        txt += "W"
+    return txt
 
-def is_safe_filename_character(c: str) -> bool:
-    return c.isalpha() or c.isdigit() or c in ('.', '-', '_')
+def is_safe_filename_character(char: str) -> bool:
+    """checks if a char is safe to use in a filename"""
+    return char.isalpha() or char.isdigit() or char in ('.', '-', '_')
 
 def safe_filename(filename: str, replacement: str="_") -> str:
+    """Turns a string into a name that can be safely used as a filename."""
     chars = [c if is_safe_filename_character(c) else replacement for c in filename]
     return "".join(chars).rstrip()
 
 def url_to_filename(url: str) -> str:
     """Returns a filename based on URL"""
     # First we need to get rid of the
-    s = url[url.find("//")+2:]
-    s = safe_filename(s, "-")
+    safe = url[url.find("//")+2:]
+    safe = safe_filename(safe, "-")
 
-    return s
+    return safe

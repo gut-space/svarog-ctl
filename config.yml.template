@@ -1,5 +1,5 @@
 logging:
-  level: WARNING
+  level: INFO
 max_elevation_greater_than: 0
 norad:
 - https://celestrak.com/NORAD/elements/noaa.txt

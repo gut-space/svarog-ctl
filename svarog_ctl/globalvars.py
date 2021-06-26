@@ -1,3 +1,10 @@
+"""
+Sets up global variables for a project: application name, version, logging
+
+- attempts to load the file ~/.appname/config.yml (but will silently continue
+  if it's missing or doesn't have expected entries)
+"""
+
 import os
 import logging
 import yaml
@@ -30,17 +37,17 @@ try:
         config = yaml.safe_load(f) # type: ignore
         lv = config["logging"]["level"]
         LOGLEVEL = logging._nameToLevel[lv]
-except:
+except IOError:
     pass
 
 try:
     with open(CONFIG_PATH) as f:
         config = yaml.safe_load(f) # type: ignore
         LOG_FILE = os.path.expanduser(config["logging"]["file"])
-except:
+except IOError:
     pass
 
-if (LOG_FILE == "stdout"):
+if LOG_FILE == "stdout":
     LOG_FILE = None
 
 print("Logging on level %s to file %s" % (logging.getLevelName(LOGLEVEL), LOG_FILE))
@@ -49,13 +56,13 @@ if DEV_ENVIRONMENT:
     LOGLEVEL = logging.DEBUG
 
 if SHORT_LOG:
-    format='%(asctime)s %(levelname)7s: %(message)s'
+    fmt='%(asctime)s %(levelname)7s: %(message)s'
     datefmt='%H:%M:%S'
 else:
-    format = '%(asctime)s %(levelname)s %(filename)s:%(lineno)d: %(message)s'
+    fmt = '%(asctime)s %(levelname)s %(filename)s:%(lineno)d: %(message)s'
     datefmt = None # This will use the default ‘%Y-%m-%d %H:%M:%S,uuu’
 
 logging.basicConfig(level = LOGLEVEL,
-                    format=format,
+                    format=fmt,
                     datefmt=datefmt,
                     filename=LOG_FILE)

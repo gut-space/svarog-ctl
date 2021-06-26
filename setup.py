@@ -1,3 +1,7 @@
+"""
+This is a setup script for the svarog_ctl module.
+"""
+
 import setuptools
 
 with open("README.md", "r") as fh:

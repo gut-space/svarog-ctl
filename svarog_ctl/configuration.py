@@ -1,11 +1,17 @@
+"""
+Several functions to manage a configuration
+"""
+
 import os
 import shutil
 import yaml
 
 from .globalvars import CONFIG_PATH
 
-
 def open_config():
+    """
+    Opens configuration file (typically ~/.appname/config.yaml, but please see
+    the glovalvars for details) and returns the yaml dictionary"""
     config_path = CONFIG_PATH
     config_exists = os.path.exists(config_path)
     if not config_exists:
@@ -21,5 +27,6 @@ def open_config():
 
 
 def save_config(config):
+    """Saves the configuration back to config file on disk."""
     with open(CONFIG_PATH, "w") as f:
         return yaml.safe_dump(config, f)

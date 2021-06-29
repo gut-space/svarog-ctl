@@ -23,12 +23,12 @@ def test_load_db():
     tle2 = db.get_norad(28654)
 
     assert tle1 is not None
-    assert isinstance(tle1, tle.tle)
+    assert isinstance(tle1, tle.Tle)
     assert tle1.name == "NOAA 18"
     assert tle1.norad == 28654
 
     assert tle2 is not None
-    assert isinstance(tle2, tle.tle)
+    assert isinstance(tle2, tle.Tle)
     assert tle2.name == "NOAA 18"
     assert tle2.norad == 28654
 

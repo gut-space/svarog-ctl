@@ -2,7 +2,7 @@
 Class representing TLE
 """
 
-class tle():
+class Tle():
     """
     TLE class represents a TLE, Two Line Element that describes an Earth orbit.
     See https://en.wikipedia.org/wiki/Two-line_element_set
@@ -30,4 +30,10 @@ class tle():
         # @todo: Add sanity checks for line 2
         self.line2 = line
 
-    # @todo: add __str__ printer for TLE
+    def __str__(self) -> str:
+        if self.name:
+            return self.name + '\n' + self.line1 + '\n' + self.line2
+        return self.line1 + '\n' + self.line2
+
+    def __repr__(self) -> str:
+        return self.__str__()

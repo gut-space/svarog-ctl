@@ -12,7 +12,7 @@ import requests.exceptions
 from orbit_predictor.sources import NoradTLESource
 from orbit_predictor.predictors.base import CartesianPredictor
 
-from svarog_ctl.tle import tle
+from svarog_ctl.tle import Tle
 
 from .globalvars import APP_NAME, VERSION, CONFIG_DIRECTORY
 from .configuration import open_config
@@ -162,17 +162,17 @@ class OrbitDatabase:
             name = lines[3*i].strip()
             line1 = lines[3*i+1].strip()
             line2 = lines[3*i+2].strip()
-            t = tle(line1, line2, name)
+            t = Tle(line1, line2, name)
             self.tle_names[name] = t
             self.tle_norad[t.norad] = t
             cnt += 1
         logging.info("Loaded %d TLEs.", cnt)
 
-    def get_name(self, l: str) -> tle:
+    def get_name(self, l: str) -> Tle:
         """Attempts to return a TLE by its name, e.g. get_name("NOAA 18") """
         return self.tle_names[l]
 
-    def get_norad(self, l: int) -> tle:
+    def get_norad(self, l: int) -> Tle:
         """Attempts to return a TLE by its norad number, e.g. get_name(12345) """
         return self.tle_norad[l]
 

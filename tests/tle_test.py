@@ -16,10 +16,7 @@ def test_tle_bad_init():
         Tle(LINE1)
 
     with pytest.raises(TypeError):
-        Tle(NAME,
-            LINE1,
-            LINE2,
-            "unsubstantiated nonsense")
+        Tle(LINE1, LINE2, NAME, "unsubstantiated nonsense")
 
 def test_tle2lines():
 

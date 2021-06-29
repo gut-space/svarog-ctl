@@ -37,3 +37,6 @@ def test_load_db():
 
     with pytest.raises(KeyError):
         db.get_norad(1234567)
+
+    pred = db.get_predictor("NOAA 18")
+    assert pred

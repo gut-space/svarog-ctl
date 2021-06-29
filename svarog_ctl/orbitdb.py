@@ -108,14 +108,14 @@ class OrbitDatabase:
                 return tle_path
             raise
 
-    def get_predictor(self, sat_id: int) -> CartesianPredictor:
+    def get_predictor(self, name: str) -> CartesianPredictor:
         """Returns a prediction for specified satellite"""
         for url in self.urls:
             path = self._get_current_tle_file(url)
             source = NoradTLESource.from_file(path)
-            if _is_in_source(source, sat_id):
-                return source.get_predictor(sat_id)
-        raise LookupError("Could not find %s in orbit data." % sat_id)
+            if _is_in_source(source, name):
+                return source.get_predictor(name)
+        raise LookupError("Could not find %s in orbit data." % name)
 
     def refresh_satellites(self, sat_ids):
         """Refresh satellite info from remote sources and local files."""

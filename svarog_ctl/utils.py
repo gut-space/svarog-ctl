@@ -2,15 +2,12 @@
 A collection of random utility functions.
 """
 
-def coords(lon: float, lat: float):
+def coords(lat: float, lon: float, alt: float = None ) -> str:
     """Turn longitude, latitude into a printable string."""
-    txt = "%2.4f%s" % (lat, "N" if lat else "S")
-
-    txt += " %2.4f" % lon
-    if lon > 0:
-        txt += "E"
-    else:
-        txt += "W"
+    txt = "%2.4f%s" % (abs(lat), "N" if lat>0 else "S")
+    txt += " %2.4f%s" % (abs(lon), "E" if lon>0 else "W")
+    if (alt):
+        txt += " %2.0fm" % alt
     return txt
 
 def is_safe_filename_character(char: str) -> bool:

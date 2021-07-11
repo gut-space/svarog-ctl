@@ -40,3 +40,34 @@ def test_load_db():
 
     pred = db.get_predictor("NOAA 18")
     assert pred
+
+    assert db.get_name_by_norad(28654) == "NOAA 18"
+
+def test_add_custom():
+
+    LINE1 = "1 44427U 98067QM  21192.54020985  .00022355  00000-0  19763-3 0  9995"
+    LINE2 = "2 44427  51.6376 177.8799 0003618 359.5888  93.1405 15.68562202115256"
+    NAME = "KRAKSAT"
+
+    db = orbitdb.OrbitDatabase()
+
+    # Make sure there's no entry for KRAKSAT
+    with pytest.raises(KeyError):
+        db.get_name("KRAKSAT")
+    with pytest.raises(KeyError):
+        db.get_norad(44427)
+    with pytest.raises(KeyError):
+        db.get_name_by_norad(44427)
+
+    # Now add a custom TLE
+    db.add_tle(LINE1, LINE2, NAME)
+
+    tle1 = db.get_name(NAME)
+    tle2 = db.get_norad(44427)
+
+    assert tle1 is not None
+    assert tle2 is not None
+    assert isinstance(tle1, tle.Tle)
+    assert isinstance(tle2, tle.Tle)
+
+    assert db.get_name_by_norad(44427) == "KRAKSAT"

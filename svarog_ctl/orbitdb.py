@@ -162,11 +162,15 @@ class OrbitDatabase:
             name = lines[3*i].strip()
             line1 = lines[3*i+1].strip()
             line2 = lines[3*i+2].strip()
-            t = Tle(line1, line2, name)
-            self.tle_names[name] = t
-            self.tle_norad[t.norad] = t
+            self.add_tle(line1, line2, name)
             cnt += 1
         logging.info("Loaded %d TLEs.", cnt)
+
+    def add_tle(self, line1: str, line2: str, name: str):
+        """Adds a new TLE entry from strings."""
+        t = Tle(line1, line2, name)
+        self.tle_names[name] = t
+        self.tle_norad[t.norad] = t
 
     def get_name(self, l: str) -> Tle:
         """Attempts to return a TLE by its name, e.g. get_name("NOAA 18") """
@@ -175,6 +179,10 @@ class OrbitDatabase:
     def get_norad(self, l: int) -> Tle:
         """Attempts to return a TLE by its norad number, e.g. get_name(12345) """
         return self.tle_norad[l]
+
+    def get_name_by_norad(self, l: int) -> str:
+        """Attempts to return a sat name by its norad number"""
+        return self.get_norad(l).get_name()
 
     def count(self) -> int:
         """Returns number of currently loaded TLEs"""

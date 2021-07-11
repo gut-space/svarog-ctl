@@ -12,6 +12,24 @@ class Tle():
         self.set_line2(line2)
         self.name = line0
 
+        self.parse(line1, line2)
+
+    def parse(self, line1: str, line2: str):
+        """Parses the TLE lines"""
+        x1 = line1.split()
+        x2 = line2.split()
+        self.id = int(x2[1])
+
+        # many more fields to parse here
+
+    def get_id(self) -> int:
+        """Returns NORAD ID of the satellite"""
+        return self.id
+
+    def get_name(self) -> str:
+        """Returns a satellite name"""
+        return self.name
+
     def set_line1(self, line: str) -> str:
         """Sets the first line out of two"""
         # @todo: Add sanity checks for line 1

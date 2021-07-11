@@ -1,7 +1,7 @@
 from svarog_ctl.tle import Tle
 import pytest
 
-NAME='NOAA-15'
+NAME='NOAA 15'
 LINE1='1 25338U 98030A   19351.71640046 +.00000015 +00000-0 +24973-4 0  9993'
 LINE2='2 25338 098.7340 012.5392 0011411 075.8229 284.4218 14.25943731122932'
 
@@ -43,3 +43,9 @@ def test_tle_repr():
     exp = NAME + '\n' + LINE1 + '\n' + LINE2
     assert x.__str__() == exp
     assert repr(x) == exp
+
+def test_tle_parsing():
+    x = Tle(LINE1, LINE2, NAME)
+
+    assert x.get_id() == 25338
+    assert x.get_name() == "NOAA 15"

@@ -6,7 +6,7 @@ def coords(lat: float, lon: float, alt: float = None ) -> str:
     """Turn longitude, latitude into a printable string."""
     txt = "%2.4f%s" % (abs(lat), "N" if lat>0 else "S")
     txt += " %2.4f%s" % (abs(lon), "E" if lon>0 else "W")
-    if (alt):
+    if alt:
         txt += " %2.0fm" % alt
     return txt
 

@@ -1,13 +1,21 @@
+"""
+Calculates the next sat pass, using specified predictor and times. Several
+algorthims are envisaged.
+"""
+
 from datetime import datetime, timedelta
+from enum import Enum
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
-from enum import Enum
 
 class PassAlgo(Enum):
-    TIME_TICKS = 1,
+    """List of available algorithms for calculating the sat pass."""
+    TIME_TICKS = 1
     DISTANCE = 2
     MAX_STEPS = 3
 
+# It's ok to have more than 5 arguments. Also, smooth will soon be used.
+# pylint: disable=R0913,W0613
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime,
              algo: PassAlgo, delta: float, smooth: bool = False):
     """Returns position list for specified satellite (identified by predictor) for
@@ -58,8 +66,8 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
     t = aos
     while t < los:
         t += d
-        if t>los: # Make sure we don't do anything stupid, like tracking below horizon
-            t = los
+        # Make sure we don't do anything stupid, like tracking below horizon
+        t = min(t, los)
         pos = pred.get_position(t)
         az, el = loc.get_azimuth_elev_deg(pos)
 

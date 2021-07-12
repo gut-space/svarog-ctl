@@ -2,32 +2,24 @@
 This is the main runner script for svarog_ctl.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from dateutil import parser as dateparser
 import logging
 from dateutil import tz
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
-from svarog_ctl import orbitdb, utils
+from svarog_ctl import orbitdb, utils, passes
 import argparse
 import sys
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
-       specified location, between AOS (start time) and LOS (end time)"""
+       specified location, between AOS (start time) and LOS (end time).
+       For the time being we're using time ticks algorithm with 30 seconds interval
+       and no smoothing."""
 
-    pos_list = []
-
-    t = aos
-    while t < los:
-        t += timedelta(seconds=30)
-        pos = pred.get_position(t)
-        az, el = loc.get_azimuth_elev_deg(pos)
-
-        pos_list.append([t, az, el])
-
-    return pos_list
+    return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 30, False)
 
 def logDetails(loc: Location, args: argparse.Namespace, when: datetime):
     logging.info("Observer location: %s" % utils.coords(loc.latitude_deg, loc.longitude_deg))
@@ -113,7 +105,7 @@ def main():
     positions = get_pass(pred, loc, pass_.aos, pass_.los)
 
     for x in positions:
-        print("Date %s, az=%3d deg el=%2d" % (x[0], x[1], x[2]))
+        print("Date %s, az=%3.1f deg el=%3.1f" % (x[0], x[1], x[2]))
 
 if __name__ == "__main__":
     main()

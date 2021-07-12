@@ -16,9 +16,14 @@ class Tle():
 
     def parse(self, line1: str, line2: str):
         """Parses the TLE lines"""
-        x1 = line1.split()
+        x1 = line1.split() # not used yet
         x2 = line2.split()
         self.id = int(x2[1])
+
+        if x1[0] != '1':
+            raise Exception("First line of TLE (%s) malformed. Expected to start with '1'" % line1)
+        if x2[0] != '2':
+            raise Exception("Second line of TLE (%s) malformed. Expected to start with '2'" % line1)
 
         # many more fields to parse here
 

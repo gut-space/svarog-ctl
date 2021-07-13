@@ -107,9 +107,9 @@ class PassesTest(unittest.TestCase):
             data = x[i]
 
             # For some reason on some systems the data varies a bit. As such we're using
-            # epsilons of 10 seconds and 0.1 degrees
+            # epsilons of 10 seconds and 0.5 degrees
             assert parser.parse(exp_data[0]) - data[0] < timedelta(seconds=10) # timestamp
-            assert abs(exp_data[1] - data[1]) < 0.1     # azimuth
-            assert abs(exp_data[2] - data[2]) < 0.1     # elevation
+            assert abs(exp_data[1] - data[1]) < 0.5     # azimuth
+            assert abs(exp_data[2] - data[2]) < 0.5     # elevation
 
 

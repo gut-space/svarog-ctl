@@ -28,7 +28,7 @@ Let's check KRAKSAT pass over Gdansk. The TLE available for KRAKSAT are:
 2 44427  51.6376 177.8799 0003618 359.5888  93.1405 15.68562202115256
 ```
 
-Gdansk's is 53.35N 18.53E. We can use the following command to order the svarog_ctl
+Gdansk is located at 53.35N 18.53E. We can use the following command to order the svarog_ctl
 to follow the next pass after 18:44 on July 14th:
 
 ```shell

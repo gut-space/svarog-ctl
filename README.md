@@ -5,7 +5,8 @@ that uses `rotctld` to control antenna rotors to track satellites fly overs.
 
 ## Status
 
-The software is in development. It's not fully functional yet.
+The software is in development. It's not fully functional yet. It can calculate the passes,
+but is not able to send commands to rotctld yet.
 
 ## Setup
 

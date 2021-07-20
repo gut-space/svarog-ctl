@@ -1,5 +1,6 @@
 from svarog_ctl import orbitdb, passes, tle
 from orbit_predictor.locations import Location
+from orbit_predictor.sources import get_predictor_from_tle_lines
 from datetime import datetime, timedelta
 from dateutil import parser
 import unittest
@@ -26,9 +27,9 @@ class PassesTest(unittest.TestCase):
         self._tle = tle.Tle(LINE1, LINE2, NAME)
 
         self._db = orbitdb.OrbitDatabase()
-        self._db.refresh_urls()
+        self._db.add_tle(LINE1, LINE2, NAME)
 
-        self._pred = self._db.get_predictor(NAME)
+        self._pred = get_predictor_from_tle_lines((LINE1, LINE2))
 
         self._loc = Location(OBSERVER_NAME, OBSERVER_LAT, OBSERVER_LON, OBSERVER_ALT)
 

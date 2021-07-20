@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
+from math import sin, cos, acos, pi
 
 class PassAlgo(Enum):
     """List of available algorithms for calculating the sat pass."""
@@ -32,7 +33,6 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
        DISTANCE - antenna is moved if its pointing deviates from the sat position
                   by more than delta degrees (not implemented yet)
        MAX_STEPS - conducts the whole fly over with exactly delta number of steps
-                   (not implemented yet)
 
        TIME_TICKS is the most basic algorithm and easiest to implement and understand.
        However, its flaw comes from varying radial velocity of a passing sat. When
@@ -61,16 +61,51 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
     elif algo == PassAlgo.MAX_STEPS:
         d = (los - aos) / delta
     elif algo == PassAlgo.DISTANCE:
-        raise NotImplementedError
+        d = timedelta(seconds = 1)
 
     t = aos
     while t < los:
         t += d
-        # Make sure we don't do anything stupid, like tracking below horizon
+        # Make sure we don't do anything stupid, like tracking below horizon. If the next
+        # step would put as past LOS (i.e. below horizon), trim down the last interval
+        # and end it early.
         t = min(t, los)
         pos = pred.get_position(t)
         az, el = loc.get_azimuth_elev_deg(pos)
 
-        pos_list.append([t, az, el])
+        if algo in [PassAlgo.TIME_TICKS, PassAlgo.MAX_STEPS]:
+            # Time ticks and maximum steps algorithms add the position all the time.
+            pos_list.append([t, az, el])
+        if algo == PassAlgo.DISTANCE:
+            # The distance algorithm adds the next position only if its distance is
+            # greater than specified value.
+            if not pos_list:
+                pos_list.append([t, az, el])
+                continue
+            [old_az, old_el] = pos_list[-1]
+            if distance(az, el, old_az, old_el) > delta:
+                pos_list.append([t, az, el])
 
     return pos_list
+
+def deg2rad(x: float):
+    """Converts value specified in degress into radians."""
+    return x/180.0*pi
+
+def rad2deg(x: float):
+    """Converts value specified in radians into degrees."""
+    return x*180.0/pi
+
+def distance(az1: float, el1:float, az2:float, el2: float):
+    """ Calculates spherical distance between two points (az1, el1) and (az2, el2).
+        The azimuth/elevation parameters are expressed in degrees. The value is
+        returned in degrees.
+
+        az = lon = lambda, el = lat = phi """
+    az1 = deg2rad(az1)
+    el1 = deg2rad(el1)
+    az2 = deg2rad(az2)
+    el2 = deg2rad(el2)
+
+    d = acos(sin(el1)*sin(el2) + cos(el1)*cos(el2)*cos(az2-az1))
+    return rad2deg(d)

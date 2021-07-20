@@ -114,3 +114,16 @@ class PassesTest(unittest.TestCase):
             assert abs(exp_data[2] - data[2]) < 0.5     # elevation
 
 
+    def test_distance(self):
+
+        exp = [
+            # az1, el1, az2, el2, expected distance
+            [10, 0, 20, 0, 10],
+            [0, 10, 0, 20, 10],
+            [350, 0, 10, 0, 20],
+            [ 0, 0, 10, 10, 14.10604]
+        ]
+
+        for e in exp:
+            dist = passes.distance(e[0], e[1], e[2], e[3])
+            assert abs(dist - e[4]) < 0.00001

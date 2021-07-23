@@ -21,9 +21,9 @@ class Tle():
         self.id = int(x2[1])
 
         if x1[0] != '1':
-            raise Exception("First line of TLE (%s) malformed. Expected to start with '1'" % line1)
+            raise ValueError("First line of TLE (%s) malformed. Expected to start with '1'" % line1)
         if x2[0] != '2':
-            raise Exception("Second line of TLE (%s) malformed. Expected to start with '2'" % line1)
+            raise ValueError("Second line of TLE (%s) malformed. Expected to start with '2'" % line1)
 
         # many more fields to parse here
 
@@ -40,9 +40,9 @@ class Tle():
         # @todo: Add sanity checks for line 1
         tokens = line.split()
         if len(tokens) != 9:
-            raise Exception("First line of TLE (%s) malformed. Expected 9 values" % line)
+            raise ValueError("First line of TLE (%s) malformed. Expected 9 values" % line)
         if tokens[0] != '1':
-            raise Exception("First line of TLE (%s) malformed. Expected '1'" % line)
+            raise ValueError("First line of TLE (%s) malformed. Expected '1'" % line)
 
         self.norad = int(''.join(ch for ch in tokens[1] if ch.isdigit()))
 

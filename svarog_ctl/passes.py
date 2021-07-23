@@ -5,9 +5,9 @@ algorthims are envisaged.
 
 from datetime import datetime, timedelta
 from enum import Enum
+from math import sin, cos, acos, pi
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
-from math import sin, cos, acos, pi
 
 class PassAlgo(Enum):
     """List of available algorithms for calculating the sat pass."""
@@ -15,10 +15,10 @@ class PassAlgo(Enum):
     DISTANCE = 2
     MAX_STEPS = 3
 
-# It's ok to have more than 5 arguments. Also, smooth will soon be used.
-# pylint: disable=R0913,W0613
+# It's ok to have more than 5 arguments.
+# pylint: disable=R0913
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime,
-             algo: PassAlgo, delta: float, smooth: bool = False):
+             algo: PassAlgo, delta: float):
     """Returns position list for specified satellite (identified by predictor) for
        specified location, between AOS (start time) and LOS (end time). algo
        specifies the algorithm for picking the intermediate steps. delta is
@@ -88,15 +88,15 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
 
     return pos_list
 
-def deg2rad(x: float):
+def deg2rad(x: float) -> float:
     """Converts value specified in degress into radians."""
     return x/180.0*pi
 
-def rad2deg(x: float):
+def rad2deg(x: float) -> float:
     """Converts value specified in radians into degrees."""
     return x*180.0/pi
 
-def distance(az1: float, el1:float, az2:float, el2: float):
+def distance(az1: float, el1:float, az2:float, el2: float) -> float:
     """ Calculates spherical distance between two points (az1, el1) and (az2, el2).
         The azimuth/elevation parameters are expressed in degrees. The value is
         returned in degrees.
@@ -107,5 +107,7 @@ def distance(az1: float, el1:float, az2:float, el2: float):
     az2 = deg2rad(az2)
     el2 = deg2rad(el2)
 
+    # This is based on the classical great circle distance. See here for details:
+    # https://en.wikipedia.org/wiki/Great-circle_distance#Formulae
     d = acos(sin(el1)*sin(el2) + cos(el1)*cos(el2)*cos(az2-az1))
     return rad2deg(d)

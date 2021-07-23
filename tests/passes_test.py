@@ -45,7 +45,7 @@ class PassesTest(unittest.TestCase):
 
         # We want to get pass details between AOS and LOS, we want to use the time ticks
         # algorithm (position every 30 seconds), we don't want any smoothing
-        x = passes.get_pass(self._pred, self._loc, aos, los, passes.PassAlgo.TIME_TICKS, 30, False)
+        x = passes.get_pass(self._pred, self._loc, aos, los, passes.PassAlgo.TIME_TICKS, 30)
 
         # These are expected locations for TIME TICKS, 30 seconds, no smoothing
         exp = [

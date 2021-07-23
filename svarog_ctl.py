@@ -47,10 +47,10 @@ def main():
     parser.add_argument('--satid', type=int,
         help="Norad ID of the satellite (if local catalog is available)")
 
-    parser.add_argument("--lat", type=float,
+    parser.add_argument("--lat", type=float, required=True,
         help="Specify the latitude of the observer in degrees, positive is northern hemisphere"
              " (e.g. 53.3 represents 53.3N for Gdansk)")
-    parser.add_argument("--lon", type=float,
+    parser.add_argument("--lon", type=float, required=True,
         help="Specify the longitude of the observer in degrees, positive is easter hemisphere "
              "(e.g. 18.5 represents 18.5E for Gdansk)")
     parser.add_argument("--alt", default=0, type=int, required=False,
@@ -62,11 +62,6 @@ def main():
     args = parser.parse_args()
 
     # Sanity checks
-    if args.lon is None or args.lat is None:
-        print("ERROR: You need to specify both the latitude (--lat) and longitude (--lon)")
-        print("ERROR: of the observer")
-        sys.exit(1)
-
     if (args.tle1 and not args.tle2) or (not args.tle1 and args.tle2):
         print("ERROR: You must either specify both TLE lines or none.")
         sys.exit(1)

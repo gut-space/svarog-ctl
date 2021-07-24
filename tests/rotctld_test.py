@@ -25,4 +25,4 @@ class PassesTest(unittest.TestCase):
         r = Rotctld("127.0.0.1", 4533)
 
         # This is clearly broken. It's supposed to be False before connect is called.
-        assert r.connected() == False
+        self.assertFalse(r.connected())

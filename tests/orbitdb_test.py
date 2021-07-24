@@ -11,12 +11,12 @@ class PassesTest(unittest.TestCase):
         db = orbitdb.OrbitDatabase()
 
         # Nothing is loaded by default
-        assert db.count() == 0
+        self.assertEqual(db.count(), 0)
 
         # There's close to 2600 sats listed for now, but the number may fluctuate over
         # time. Let's make the test robust.
         db.refresh_urls()
-        assert db.count() > 2500
+        self.assertGreater(db.count(), 2500)
 
     def test_load_db(self):
 
@@ -26,15 +26,15 @@ class PassesTest(unittest.TestCase):
         tle1 = db.get_name("NOAA 18")
         tle2 = db.get_norad(28654)
 
-        assert tle1 is not None
-        assert isinstance(tle1, tle.Tle)
-        assert tle1.name == "NOAA 18"
-        assert tle1.norad == 28654
+        self.assertIsNotNone(tle1)
+        self.assertIsInstance(tle1, tle.Tle)
+        self.assertEqual(tle1.name, "NOAA 18")
+        self.assertEqual(tle1.norad, 28654)
 
-        assert tle2 is not None
-        assert isinstance(tle2, tle.Tle)
-        assert tle2.name == "NOAA 18"
-        assert tle2.norad == 28654
+        self.assertIsNotNone(tle2)
+        self.assertIsInstance(tle2, tle.Tle)
+        self.assertEqual(tle2.name, "NOAA 18")
+        self.assertEqual(tle2.norad, 28654)
 
         with pytest.raises(KeyError):
             db.get_name("nonexistent")
@@ -43,9 +43,9 @@ class PassesTest(unittest.TestCase):
             db.get_norad(1234567)
 
         pred = db.get_predictor("NOAA 18")
-        assert pred
+        self.assertIsNotNone(pred)
 
-        assert db.get_name_by_norad(28654) == "NOAA 18"
+        self.assertEqual(db.get_name_by_norad(28654), "NOAA 18")
 
     def test_add_custom(self):
 
@@ -71,7 +71,7 @@ class PassesTest(unittest.TestCase):
 
         self.assertIsNotNone(tle1)
         self.assertIsNotNone(tle2)
-        assert isinstance(tle1, tle.Tle)
-        assert isinstance(tle2, tle.Tle)
+        self.assertIsInstance(tle1, tle.Tle)
+        self.assertIsInstance(tle2, tle.Tle)
 
-        assert db.get_name_by_norad(44427) == "KRAKSAT"
+        self.assertEqual(db.get_name_by_norad(44427), "KRAKSAT")

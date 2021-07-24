@@ -89,18 +89,18 @@ class PassesTest(unittest.TestCase):
 
             # Second step is to verify that the timestamps looks reasonable,
             # the azimuth is between 0 and 360 and elevation is between 0 and 90.
-            assert current >= aos
-            assert current <= los
-            assert pos[1] < 360
-            assert pos[1] >= 0
-            assert pos[2] <= 90
-            assert pos[2] >= 0
+            self.assertGreaterEqual(current, aos)
+            self.assertLessEqual(current, los)
+            self.assertLess(pos[1], 360)
+            self.assertGreaterEqual(pos[1], 0)
+            self.assertLessEqual(pos[2], 90)
+            self.assertGreaterEqual(pos[2], 0)
 
         # Third step is to verify against the precalculated values.
         # The value of this step is not too high, as the same code was used
         # to generate that reference data. However, it's still useful to
         # detect regressions.
-        assert len(exp) == len(x)
+        self.assertEqual(len(exp), len(x))
 
         # Check that each sample matches expectation
         for i in range(len(exp)):
@@ -109,9 +109,9 @@ class PassesTest(unittest.TestCase):
 
             # For some reason on some systems the data varies a bit. As such we're using
             # epsilons of 10 seconds and 0.5 degrees
-            assert parser.parse(exp_data[0]) - data[0] < timedelta(seconds=10) # timestamp
-            assert abs(exp_data[1] - data[1]) < 0.5     # azimuth
-            assert abs(exp_data[2] - data[2]) < 0.5     # elevation
+            self.assertAlmostEqual(parser.parse(exp_data[0]), data[0], delta=timedelta(seconds=5))
+            self.assertAlmostEqual(exp_data[1], data[1], delta = 0.5)     # azimuth
+            self.assertAlmostEqual(exp_data[2], data[2], delta = 0.5)     # elevation
 
 
     def test_distance(self):
@@ -126,4 +126,4 @@ class PassesTest(unittest.TestCase):
 
         for e in exp:
             dist = passes.distance(e[0], e[1], e[2], e[3])
-            assert abs(dist - e[4]) < 0.00001
+            self.assertAlmostEqual(dist, e[4], delta = 0.00001)

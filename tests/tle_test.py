@@ -24,31 +24,31 @@ class TleTest(unittest.TestCase):
     def test_tle2lines(self):
 
         x = Tle(LINE1, LINE2)
-        assert x.name == ""
-        assert x.line1 == LINE1
-        assert x.line2 == LINE2
+        self.assertEqual(x.name, "")
+        self.assertEqual(x.line1, LINE1)
+        self.assertEqual(x.line2, LINE2)
 
     def test_tle3lines(self):
 
         x = Tle(LINE1, LINE2, NAME)
-        assert x.name == NAME
-        assert x.line1 == LINE1
-        assert x.line2 == LINE2
+        self.assertEqual(x.name, NAME)
+        self.assertEqual(x.line1, LINE1)
+        self.assertEqual(x.line2, LINE2)
 
     def test_tle_parse(self):
         x = Tle(LINE1, LINE2, NAME)
-        assert x.norad == 25338
+        self.assertEqual(x.norad, 25338)
 
     def test_tle_repr(self):
         """Make sure there's an easy way to print the Tle"""
         x = Tle(LINE1, LINE2, NAME)
 
         exp = NAME + '\n' + LINE1 + '\n' + LINE2
-        assert x.__str__() == exp
-        assert repr(x) == exp
+        self.assertEqual(x.__str__(), exp)
+        self.assertEqual(repr(x), exp)
 
     def test_tle_parsing(self):
         x = Tle(LINE1, LINE2, NAME)
 
-        assert x.get_id() == 25338
-        assert x.get_name() == "NOAA 15"
+        self.assertEqual(x.get_id(), 25338)
+        self.assertEqual(x.get_name(), "NOAA 15")

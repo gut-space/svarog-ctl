@@ -23,7 +23,8 @@ class Tle():
         if x1[0] != '1':
             raise ValueError("First line of TLE (%s) malformed. Expected to start with '1'" % line1)
         if x2[0] != '2':
-            raise ValueError("Second line of TLE (%s) malformed. Expected to start with '2'" % line1)
+            raise ValueError("Second line of TLE (%s) malformed. Expected to start with '2'"
+            % line2)
 
         # many more fields to parse here
 

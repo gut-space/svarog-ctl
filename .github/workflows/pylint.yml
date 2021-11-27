@@ -20,4 +20,4 @@ jobs:
         pip install -r requirements.txt
     - name: Analysing the code with pylint
       run: |
-        pylint --rcfile .pylint `ls *.py svarog_ctl/*.py|grep .py$|xargs`
+        pylint --rcfile .pylintrc `ls *.py svarog_ctl/*.py|grep .py$|xargs`

@@ -26,10 +26,10 @@ logging.basicConfig(level=logging.INFO)
 
 ctl = Rotctld("127.0.0.1", 4533, 5)
 
-print("Connected %s" % ctl.connected())
+print(f"Connected {ctl.connected()}")
 ctl.connect()
 
-print("Connected %s" % ctl.connected())
+print(f"Connected {ctl.connected()}")
 model = ctl.get_model()
 
 pos = ctl.get_pos()
@@ -40,4 +40,4 @@ pos = ctl.get_pos()
 
 ctl.close()
 
-print("Connected %s" % ctl.connected())
+print(f"Connected {ctl.connected()}")

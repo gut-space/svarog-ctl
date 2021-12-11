@@ -2,6 +2,8 @@
 This is the main runner script for svarog_ctl.
 """
 
+import time
+
 import argparse
 import sys
 import logging
@@ -11,7 +13,7 @@ from dateutil import tz
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
-from svarog_ctl import orbitdb, utils, passes
+from svarog_ctl import orbitdb, utils, passes, rotcltd
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -19,20 +21,87 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
        For the time being we're using time ticks algorithm with 30 seconds interval
        and no smoothing."""
 
-    return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 30, False)
+    return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 30)
 
-def logDetails(loc: Location, args: argparse.Namespace, when: datetime, pass_,
+def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
                timezone: tz.tz):
     """Print the details of parameters used. Mostly for developer's convenience."""
     logging.info("Observer location: %s", utils.coords(loc.latitude_deg, loc.longitude_deg))
     logging.info("After time: %s", when)
     logging.info("AOS: %s", str(pass_.aos.astimezone(timezone)))
-    logging.info("Max elevation: %.2f deg at %s", pass_.max_elevation_deg,
+    logging.info("Max elevation: %.1f deg at %s", pass_.max_elevation_deg,
         str(pass_.max_elevation_date.astimezone(timezone)))
     logging.info("LOS: %s", str(pass_.los.astimezone(timezone)))
     logging.info("Duration: %s", str(timedelta(seconds=pass_.duration_s)))
 
     logging.debug(args)
+
+def print_pos(positions: list):
+    """Prints the positions list. Useful for debugging."""
+    print(f"---positions has {len(positions)} entries")
+    for x in positions:
+        print(f"{x[0]}: az={x[1]:3.1f},el={x[2]:03.1f}")
+
+def rewind_positions(positions: list) -> list:
+    """This function rewinds (shifts positions) in time in a way that the pass will start now.
+       This is useful for testing, because usually the sat pass is in the future and we want to run
+       the experiments or tests now. Looking at it from a different perspective, this is a good
+       way to test future pass in advance (or replay old pass).
+
+       Parameters
+       ==========
+       positions - list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
+       returns - modified list of positions (tuples of 3 elements: timestamp, azimuth, elevation)"""
+
+    delta = positions[0][0] - datetime.now()
+    return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
+
+def track_positions(positions: list, rotctld: rotcltd.Rotctld, delta: int):
+    """This function sends commands to the rotator and tracks its position.
+
+       Parameters
+       ==========
+       positions - list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
+       rotctld - an instance of open connection to the rotator
+       delta - step time in seconds (the loop will get the rotator position every delta seconds)
+
+       returns a list of actual rotator positions over time (list of tuple with 3 elements: timestamp, azimuth, elevation)
+    """
+
+    actual = [] # actual rotator positions
+
+    timeout = positions[-1][0] # The last entry specifies last position and also when to stop movement
+
+    # get the first command
+    index = 0
+    pos = positions[index]
+
+    while datetime.now() < timeout:
+        actual_az, actual_el = rotctld.get_pos()
+        actual.append([datetime.now(), actual_az, actual_el])
+        print(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ {pos[0]} (in {pos[0]-datetime.now()})")
+
+        if pos[0] <= datetime.now():
+
+            # normalize azimuth to -180;180, as this is what most rotctl rotators require.
+            if pos[1]>180.0:
+                pos[1] = pos[1] - 360.0
+
+            # Ok, it's time to execute the next command
+            print(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, el={pos[2]:.1f}")
+
+            status, resp = rotctld.set_pos(pos[1], pos[2])
+            if not status:
+                logging.warning(f"set_pos command failed. response={resp}")
+            index = index + 1
+            # If we gotten to the end of the list of commands, we're done here.
+            if index>len(positions):
+                return
+            pos = positions[index]
+
+        time.sleep(delta)
+
+    return
 
 def main():
     """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
@@ -58,6 +127,14 @@ def main():
 
     parser.add_argument("--time", default=str(datetime.utcnow()), type=str,
         help="Specify the timestamp before the pass in UTC.")
+
+    parser.add_argument("--host", default="127.0.0.1", type=str,
+        help="Specify how to connect (which hostname to use) to a running rotctld.")
+    parser.add_argument("--port", default=4533, type=int,
+        help="Specify which port to connect to")
+
+    parser.add_argument("--now", default=False, type=bool,
+        help="Don't wait for the actual pass, start now (useful for testing only)")
 
     args = parser.parse_args()
 
@@ -93,7 +170,7 @@ def main():
             name = tle.get_name()
         elif args.sat is not None:
             name = args.sat
-        print("Looking for name: ", name)
+        logging.debug(f"Looking for satellite {name}")
         pred = db.get_predictor(name)
 
     when = dateparser.parse(args.time)
@@ -105,12 +182,24 @@ def main():
     local_tz = True
     target_tz = tz.tzutc() if not local_tz else tz.tzlocal()
 
-    logDetails(loc, args, when, pass_, target_tz)
+    log_details(loc, args, when, pass_, target_tz)
 
     positions = get_pass(pred, loc, pass_.aos, pass_.los)
 
-    for x in positions:
-        print("Date %s, az=%3.1f deg el=%3.1f" % (x[0], x[1], x[2]))
+
+    if (args.now):
+        positions = rewind_positions(positions)
+
+    print_pos(positions)
+
+    print(f"Connecting to {args.host}, port {args.port}")
+
+    rotctld = rotcltd.Rotctld(args.host, args.port, 1)
+    rotctld.connect()
+
+    track_positions(positions, rotctld, 3)
+
+    rotctld.close()
 
 if __name__ == "__main__":
     main()

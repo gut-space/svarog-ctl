@@ -79,7 +79,7 @@ def track_positions(positions: list, rotctld: rotcltd.Rotctld, delta: int):
     while datetime.now() < timeout:
         actual_az, actual_el = rotctld.get_pos()
         actual.append([datetime.now(), actual_az, actual_el])
-        print(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ {pos[0]} (in {pos[0]-datetime.now()})")
+        logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ {pos[0]} (in {pos[0]-datetime.now()})")
 
         if pos[0] <= datetime.now():
 
@@ -88,7 +88,7 @@ def track_positions(positions: list, rotctld: rotcltd.Rotctld, delta: int):
                 pos[1] = pos[1] - 360.0
 
             # Ok, it's time to execute the next command
-            print(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, el={pos[2]:.1f}")
+            logging.info(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, el={pos[2]:.1f}")
 
             status, resp = rotctld.set_pos(pos[1], pos[2])
             if not status:
@@ -96,12 +96,18 @@ def track_positions(positions: list, rotctld: rotcltd.Rotctld, delta: int):
             index = index + 1
             # If we gotten to the end of the list of commands, we're done here.
             if index>len(positions):
-                return
+                return actual
             pos = positions[index]
 
         time.sleep(delta)
 
-    return
+    return actual
+
+def plot_charts(intended: list, actual: list):
+    """To be implemented: generate charts based on two series of data:
+       1. the intended antenna position over time (commands we're sending),
+       2. the actual antenna position (as checked using get_pos command)."""
+    pass
 
 def main():
     """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
@@ -192,12 +198,14 @@ def main():
 
     print_pos(positions)
 
-    print(f"Connecting to {args.host}, port {args.port}")
+    logging.info(f"Connecting to {args.host}, port {args.port}")
 
     rotctld = rotcltd.Rotctld(args.host, args.port, 1)
     rotctld.connect()
 
-    track_positions(positions, rotctld, 3)
+    antenna_pos = track_positions(positions, rotctld, 3)
+
+    plot_charts(positions, antenna_pos)
 
     rotctld.close()
 

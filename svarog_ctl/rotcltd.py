@@ -4,6 +4,9 @@ rotctld - python 3 interface to rotctld
 This is roughly based on Mark Jessop's code, which is available here:
 https://github.com/darksidelemm/rotctld-web-gui/blob/master/rotatorgui.py
 
+For a nice background about the rotctld protocol, see
+https://www.mankier.com/1/rotctl#Commands-Rotator_Commands
+
 Author: Tomek Mrugalski
 License: MIT
 """
@@ -72,7 +75,7 @@ class Rotctld:
             resp = resp.decode().strip()
 
         resp_txt = resp.replace("\n"," ")
-        logging.info("Sent command [%s], received response [%s]", cmd, resp_txt)
+        logging.debug("Sent command [%s], received response [%s]", cmd, resp_txt)
         return resp
 
     def get_model(self):
@@ -80,6 +83,21 @@ class Rotctld:
         model = self.send_command("_")
         logging.info("Rotator model reported as %s", model)
         return model
+
+    def norm_az(self, az: float) -> float:
+        """Get the normalized (-180.0.. 180) azimuth."""
+        return ((az + 180.0) % 360.0) - 180.0
+
+    def norm_el(self, el: float) -> float:
+        """Get the normalized (0..90) elevation."""
+
+        # Truncate if necessary
+        if el > 90.0:
+            el = 90.0
+        elif el < 0.0:
+            el = 0.0
+
+        return el
 
     def set_pos(self,azimuth : float,elevation : float):
         """Command rotator to a particular azimuth/elevation.
@@ -91,16 +109,12 @@ class Rotctld:
             time to actually rotate. The command response is sent immediately,
             but the antenna rotates for a while. Please use get_pos() to check
             the current antenna rotation."""
-        # Sanity check inputs.
-        if elevation > 90.0:
-            elevation = 90.0
-        elif elevation < 0.0:
-            elevation = 0.0
 
-        azimuth = azimuth % 360.0
+        elevation = self.norm_el(elevation)
+        azimuth = self.norm_az(azimuth)
 
         command = "P %3.1f %2.1f" % (azimuth,elevation)
-        logging.info("Setting position to %s", command)
+        logging.debug(f"Setting position to {command}")
         resp = self.send_command(command)
         if "RPRT 0" in resp:
             return True, resp
@@ -118,9 +132,18 @@ class Rotctld:
             el = float(resp_split[1])
             return az, el
         except IndexError as e:
-            logging.error("Could not parse position: %s: %s", resp, e)
+            logging.error(f"Could not parse position: {resp}: {e}")
             return None, None
 
     def stop(self):
         """ Tells the rotator to stop rotating immediately."""
-        self.send_command('S')
+        return self.send_command('S')
+
+    def park(self):
+        """Tells the rotator to park itself. Some rotators don't support this operation."""
+        return self.send_command('K')
+
+    def capabilities(self):
+        """Attempts to get what the rotctld lib knows about this specific backend. Response
+           is very much rotctld dependent."""
+        return self.send_command('1')

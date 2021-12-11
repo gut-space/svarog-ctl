@@ -23,6 +23,23 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
 
     return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 30)
 
+def get_fake_pass(steps: int, start_az: int, end_az: int):
+    """Returns fake positions list. Useful for testing. The timing is always now..now+2 minutes.
+
+       Parameters
+       ==========
+       steps - how many steps
+       start_az - starting azimuth
+       end_az - ending azimuth"""
+    pos = []
+    delta = (end_az - start_az) / (steps-1)
+    for x in range(steps):
+        pos.append([datetime.now() + timedelta(seconds=x), start_az + delta*x, 5.0])
+
+    pos.append([datetime.now() + timedelta(seconds=120), 0, 0])
+
+    return pos
+
 def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
                timezone: tz.tz):
     """Print the details of parameters used. Mostly for developer's convenience."""
@@ -192,7 +209,11 @@ def main():
 
     positions = get_pass(pred, loc, pass_.aos, pass_.los)
 
+    # Uncomment this for azimuth debugging
+    # positions = get_fake_pass(10, 30, -30) # generate from 3 to 200 degrees, in 10 steps
+    # print_pos(positions)
 
+    # If specified, rewind in time so the positions start immediately.
     if (args.now):
         positions = rewind_positions(positions)
 

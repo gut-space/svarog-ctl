@@ -5,12 +5,15 @@ that uses `rotctld` to control antenna rotors to track satellites fly overs.
 
 ## Status
 
-The software is in development. It's not fully functional yet. It can calculate the passes,
-but is not able to send commands to rotctld yet.
+The software is functional, but still in relatively early development. It can calculate the passes
+based on either specified TLE data, or download data from Celestrak if sat name or Norad ID is
+specified, then it can connect to rotctld and send commands to move the rotator.
 
 ## Setup
 
-`svarog-ctl` requires a configured `rotctld` daemon running. Details TBD.
+`svarog-ctl` requires a configured `rotctld` daemon running. Make sure your actual
+rotator hardware is supported by rotctld. For testing purposes, `rotctld` can be started
+with a dummy rotator: `rotctld -m 1 -t 4533`
 
 ## Usage
 
@@ -19,7 +22,7 @@ First, observer's coordinates have to be specified (see `--lat`, `--lon` and opt
 also `--alt` parameters). The second essential parameter is to when to start the
 prediction (`--time`). If time is not specified, current time stamp is used.
 
-Also, `svarog-ctl` needs to know which sat to track. The orbit is determined using the TLE format. 
+Also, `svarog-ctl` needs to know which sat to track. The orbit is determined using the TLE format.
 There are two ways to provide this. First is to specify the two TLE lines explicitly.
 Let's check KRAKSAT pass over Gdansk. The TLE available for KRAKSAT are:
 
@@ -38,7 +41,7 @@ to follow the next pass after 18:44 on July 14th:
 ```
 
 Alternatively, `svarog-ctl` can download TLE data from [Celestrak](https://celestrak.com/NORAD/elements/active.txt).
-If you need to provide additional or alternative sources, see `TLE_SOURCES` in 
+If you need to provide additional or alternative sources, see `TLE_SOURCES` in
 https://github.com/gut-space/svarog-ctl/blob/master/svarog_ctl/orbitdb.py#L21
 This mode of operation requires Internet access. The downloaded data is cached
 for 7 days until it's refreshed.
@@ -54,3 +57,9 @@ python ./svarog_ctl.py --lat 53.5 --lon 18.5 --sat "NOAA 18"
 python ./svarog_ctl.py --lat 53.5 --lon 18.5 --satid 25338
 ```
 
+To be able to connect to `rotctld`, you also need to specify hostname (`--host`) and port
+(`--port`).
+
+For debugging purposes, svarog-ctl can be told to not wait till the next sat pass actually starts,
+but pretent the sat is starting its flyover right now (`--now true`). That is obviously useful
+for testing purposes only.

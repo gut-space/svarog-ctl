@@ -21,7 +21,7 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
        For the time being we're using time ticks algorithm with 30 seconds interval
        and no smoothing."""
 
-    return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 30)
+    return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 5)
 
 def get_fake_pass(steps: int, start_az: int, end_az: int):
     """Returns fake positions list. Useful for testing. The timing is always now..now+2 minutes.

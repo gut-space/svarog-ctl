@@ -13,7 +13,7 @@ from dateutil import tz
 from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
-from svarog_ctl import orbitdb, utils, passes, rotcltd
+from svarog_ctl import orbitdb, utils, passes, rotctld
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -73,7 +73,7 @@ def rewind_positions(positions: list) -> list:
     delta = positions[0][0] - datetime.now()
     return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
 
-def track_positions(positions: list, rotctld: rotcltd.Rotctld, delta: int):
+def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     """This function sends commands to the rotator and tracks its position.
 
        Parameters
@@ -221,7 +221,7 @@ def main():
 
     logging.info(f"Connecting to {args.host}, port {args.port}")
 
-    rotctld = rotcltd.Rotctld(args.host, args.port, 1)
+    rotctld = rotctld.Rotctld(args.host, args.port, 1)
     rotctld.connect()
 
     antenna_pos = track_positions(positions, rotctld, 3)

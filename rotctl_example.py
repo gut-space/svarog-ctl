@@ -20,7 +20,7 @@ This is a test script for svarog_ctl. It's useful for developers only.
 # print ("received data:", rcvd)
 
 import logging
-from svarog_ctl.rotcltd import Rotctld
+from svarog_ctl.rotctld import Rotctld
 
 logging.basicConfig(level=logging.INFO)
 

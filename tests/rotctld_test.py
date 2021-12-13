@@ -1,6 +1,6 @@
 import pytest
 import subprocess
-from svarog_ctl.rotcltd import Rotctld
+from svarog_ctl.rotctld import Rotctld
 import unittest
 import time
 

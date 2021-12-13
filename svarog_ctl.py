@@ -221,14 +221,14 @@ def main():
 
     logging.info(f"Connecting to {args.host}, port {args.port}")
 
-    rotctld = rotctld.Rotctld(args.host, args.port, 1)
-    rotctld.connect()
+    ctl = rotctld.Rotctld(args.host, args.port, 1)
+    ctl.connect()
 
-    antenna_pos = track_positions(positions, rotctld, 3)
+    antenna_pos = track_positions(positions, ctl, 3)
 
     plot_charts(positions, antenna_pos)
 
-    rotctld.close()
+    ctl.close()
 
 if __name__ == "__main__":
     main()

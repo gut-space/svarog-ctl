@@ -126,6 +126,11 @@ def plot_charts(intended: list, actual: list):
        2. the actual antenna position (as checked using get_pos command)."""
     pass
 
+def get_norad(tle: list) -> int:
+    """Gets norad id from the TLE data."""
+    _, line2 = tle
+    return int(line2.split(" ")[1])
+
 def main():
     """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
        call get_pass (which will return a list of az,el positions over time),
@@ -195,6 +200,11 @@ def main():
             name = args.sat
         logging.debug(f"Looking for satellite {name}")
         pred = db.get_predictor(name)
+
+    # Need to extract norad id
+    satid = get_norad(pred.tle.lines)
+
+    logging.info(f"Tracking sat {name}, norad id {satid}, all timestamps in UTC")
 
     when = dateparser.parse(args.time)
 

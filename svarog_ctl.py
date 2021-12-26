@@ -232,7 +232,11 @@ def main():
     logging.info(f"Connecting to {args.host}, port {args.port}")
 
     ctl = rotctld.Rotctld(args.host, args.port, 1)
-    ctl.connect()
+    try:
+        ctl.connect()
+    except ConnectionRefusedError as e:
+        logging.critical(f"Failed to connect to rotctld: {str(e)}")
+        sys.exit(-1)
 
     antenna_pos = track_positions(positions, ctl, 3)
 

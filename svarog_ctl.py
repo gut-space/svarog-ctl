@@ -7,7 +7,7 @@ import time
 import argparse
 import sys
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dateutil import parser as dateparser
 from dateutil import tz
 from orbit_predictor.predictors.base import CartesianPredictor
@@ -44,12 +44,12 @@ def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
                timezone: tz.tz):
     """Print the details of parameters used. Mostly for developer's convenience."""
     logging.info("Observer location: %s", utils.coords(loc.latitude_deg, loc.longitude_deg))
-    logging.info("After time: %s", when)
-    logging.info("AOS: %s", str(pass_.aos.astimezone(timezone)))
+    logging.info(f"After time: {when} {when.astimezone(timezone).tzname()}")
+    logging.info(f"Next AOS  : {pass_.aos.astimezone(timezone)} {pass_.aos.astimezone(timezone).tzname()}")
+    logging.info(f"Next LOS  : {pass_.los.astimezone(timezone)} {pass_.los.astimezone(timezone).tzname()}")
     logging.info("Max elevation: %.1f deg at %s", pass_.max_elevation_deg,
         str(pass_.max_elevation_date.astimezone(timezone)))
-    logging.info("LOS: %s", str(pass_.los.astimezone(timezone)))
-    logging.info("Duration: %s", str(timedelta(seconds=pass_.duration_s)))
+    logging.info(f"Duration: {timedelta(seconds=pass_.duration_s)}")
 
     logging.debug(args)
 
@@ -57,7 +57,7 @@ def print_pos(positions: list):
     """Prints the positions list. Useful for debugging."""
     print(f"---positions has {len(positions)} entries")
     for x in positions:
-        print(f"{x[0]}: az={x[1]:3.1f},el={x[2]:03.1f}")
+        print(f"utc={x[0]}, local={x[0].astimezone()}: az={x[1]:3.1f}, el={x[2]:03.1f}")
 
 def rewind_positions(positions: list) -> list:
     """This function rewinds (shifts positions) in time in a way that the pass will start now.
@@ -153,7 +153,7 @@ def main():
     parser.add_argument("--alt", default=0, type=int, required=False,
         help="Observer's altitude, in meters above sea level")
 
-    parser.add_argument("--time", default=str(datetime.utcnow()), type=str,
+    parser.add_argument("--time", default=str(datetime.now(timezone.utc)), type=str,
         help="Specify the timestamp before the pass in UTC.")
 
     parser.add_argument("--host", default="127.0.0.1", type=str,
@@ -161,8 +161,11 @@ def main():
     parser.add_argument("--port", default=4533, type=int,
         help="Specify which port to connect to")
 
-    parser.add_argument("--now", default=False, type=bool,
+    parser.add_argument("--now", dest='now', action='store_const', const=True, default=False,
         help="Don't wait for the actual pass, start now (useful for testing only)")
+
+    parser.add_argument("--local", dest='local_tz', action='store_const', const=True, default=False,
+        help="Use the local time zone, instead of the default UTC")
 
     args = parser.parse_args()
 
@@ -204,16 +207,16 @@ def main():
     # Need to extract norad id
     satid = get_norad(pred.tle.lines)
 
-    logging.info(f"Tracking sat {name}, norad id {satid}, all timestamps in UTC")
-
+    # Get the timezone
+    target_tz = timezone.utc if not args.local_tz else tz.tzlocal()
     when = dateparser.parse(args.time)
+
+    logging.info(f"Calculating pass after time: {when} utc={when.astimezone(timezone.utc)} localtz={when.astimezone(tz.tzlocal())}")
+    logging.info(f"Tracking sat {name}, norad id {satid}, all timestamps in {when.astimezone(target_tz).tzname()}")
 
     loc = Location('Observer', args.lat, args.lon, args.alt)
 
     pass_ = pred.get_next_pass(loc, when_utc=when)
-
-    local_tz = True
-    target_tz = tz.tzutc() if not local_tz else tz.tzlocal()
 
     log_details(loc, args, when, pass_, target_tz)
 

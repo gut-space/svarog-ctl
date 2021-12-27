@@ -99,13 +99,13 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     index = 0
     pos = positions[index]
 
-    while datetime.now() < timeout:
+    while datetime.now(timezone.utc) < timeout:
         actual_az, actual_el = rotctld.get_pos()
-        actual.append([datetime.now(), actual_az, actual_el])
+        actual.append([datetime.now(timezone.utc), actual_az, actual_el])
         logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ "
                        "{pos[0]} (in {pos[0]-datetime.now()})")
 
-        if pos[0] <= datetime.now():
+        if pos[0] <= datetime.now(timezone.utc):
 
             # normalize azimuth to -180;180, as this is what most rotctl rotators require.
             if pos[1]>180.0:

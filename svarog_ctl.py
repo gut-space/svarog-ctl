@@ -40,16 +40,19 @@ def get_fake_pass(steps: int, start_az: int, end_az: int):
 
     return pos
 
+def get_timestamp_str(timestamp: datetime, timezone: tz.tz) -> str:
+    return f"{timestamp.astimezone(timezone)} {timestamp.astimezone(timezone).tzname()}"
+
 def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
-               timezone: tz.tz):
+               zone: tz.tz):
     """Print the details of parameters used. Mostly for developer's convenience."""
-    logging.info("Observer location: %s", utils.coords(loc.latitude_deg, loc.longitude_deg))
-    logging.info(f"After time: {when} {when.astimezone(timezone).tzname()}")
-    logging.info(f"Next AOS  : {pass_.aos.astimezone(timezone)} {pass_.aos.astimezone(timezone).tzname()}")
-    logging.info(f"Next LOS  : {pass_.los.astimezone(timezone)} {pass_.los.astimezone(timezone).tzname()}")
+    logging.info("Observer loc.: %s", utils.coords(loc.latitude_deg, loc.longitude_deg))
+    logging.info("After time   : %s", get_timestamp_str(when, zone))
+    logging.info("Next AOS     : %s", get_timestamp_str(pass_.aos, zone))
+    logging.info("Next LOS     : %s", get_timestamp_str(pass_.los, zone))
     logging.info("Max elevation: %.1f deg at %s", pass_.max_elevation_deg,
-        str(pass_.max_elevation_date.astimezone(timezone)))
-    logging.info(f"Duration: {timedelta(seconds=pass_.duration_s)}")
+        str(pass_.max_elevation_date.astimezone(zone)))
+    logging.info("Duration     : %s", timedelta(seconds=pass_.duration_s))
 
     logging.debug(args)
 
@@ -68,7 +71,8 @@ def rewind_positions(positions: list) -> list:
        Parameters
        ==========
        positions - list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
-       returns - modified list of positions (tuples of 3 elements: timestamp, azimuth, elevation)"""
+       returns - modified list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
+    """
 
     delta = positions[0][0] - datetime.now()
     return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
@@ -82,12 +86,14 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
        rotctld - an instance of open connection to the rotator
        delta - step time in seconds (the loop will get the rotator position every delta seconds)
 
-       returns a list of actual rotator positions over time (list of tuple with 3 elements: timestamp, azimuth, elevation)
+       returns a list of actual rotator positions over time (list of 3 elements tuples:
+       timestamp, azimuth, elevation)
     """
 
     actual = [] # actual rotator positions
 
-    timeout = positions[-1][0] # The last entry specifies last position and also when to stop movement
+    timeout = positions[-1][0] # The last entry specifies the last position and also
+                               # when to stop movement
 
     # get the first command
     index = 0
@@ -96,7 +102,8 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     while datetime.now() < timeout:
         actual_az, actual_el = rotctld.get_pos()
         actual.append([datetime.now(), actual_az, actual_el])
-        logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ {pos[0]} (in {pos[0]-datetime.now()})")
+        logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ "
+                       "{pos[0]} (in {pos[0]-datetime.now()})")
 
         if pos[0] <= datetime.now():
 
@@ -105,7 +112,8 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
                 pos[1] = pos[1] - 360.0
 
             # Ok, it's time to execute the next command
-            logging.info(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, el={pos[2]:.1f}")
+            logging.info(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, "
+                          "el={pos[2]:.1f}")
 
             status, resp = rotctld.set_pos(pos[1], pos[2])
             if not status:
@@ -211,8 +219,10 @@ def main():
     target_tz = timezone.utc if not args.local_tz else tz.tzlocal()
     when = dateparser.parse(args.time)
 
-    logging.info(f"Calculating pass after time: {when} utc={when.astimezone(timezone.utc)} localtz={when.astimezone(tz.tzlocal())}")
-    logging.info(f"Tracking sat {name}, norad id {satid}, all timestamps in {when.astimezone(target_tz).tzname()}")
+    logging.info("Calculating pass after time: utc=%s localtz=%s",
+                 when.astimezone(timezone.utc), when.astimezone(tz.tzlocal()))
+    logging.info("Tracking sat %s, norad id %d, all timestamps in %s", name, satid,
+                 when.astimezone(target_tz).tzname())
 
     loc = Location('Observer', args.lat, args.lon, args.alt)
 
@@ -227,7 +237,7 @@ def main():
     # print_pos(positions)
 
     # If specified, rewind in time so the positions start immediately.
-    if (args.now):
+    if args.now:
         positions = rewind_positions(positions)
 
     print_pos(positions)

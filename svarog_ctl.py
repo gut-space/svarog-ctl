@@ -74,7 +74,7 @@ def rewind_positions(positions: list) -> list:
        returns - modified list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
     """
 
-    delta = positions[0][0] - datetime.now()
+    delta = positions[0][0] - datetime.now(timezone.utc)
     return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
 
 def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
@@ -113,7 +113,7 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
 
             # Ok, it's time to execute the next command
             logging.info(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, "
-                          "el={pos[2]:.1f}")
+                         f"el={pos[2]:.1f}")
 
             status, resp = rotctld.set_pos(pos[1], pos[2])
             if not status:

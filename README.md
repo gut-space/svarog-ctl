@@ -60,6 +60,32 @@ python ./svarog_ctl.py --lat 53.5 --lon 18.5 --satid 25338
 To be able to connect to `rotctld`, you also need to specify hostname (`--host`) and port
 (`--port`).
 
+By default, svarog-ctl prints everything using UTC timezone, but `--local` switch will make
+it use local timezone instead.
+
 For debugging purposes, svarog-ctl can be told to not wait till the next sat pass actually starts,
-but pretent the sat is starting its flyover right now (`--now true`). That is obviously useful
+but pretent the sat is starting its flyover right now (`--now`). That is obviously useful
 for testing purposes only.
+
+## Python Usage
+
+The rotator controller can also be easily controlled from Python. It requires the rotctld daemon
+to be running. Here's example code:
+
+```python
+
+from svarog_ctl import rotctld
+
+# Let's assume the rotcltd is listening on loopback on port 4533.
+ctl = rotctld.Rotctld("127.0.0.1", 4533, 1)
+ctl.connect()
+
+# Let's see what kind of capabilities the rotctld reported for this rotator
+print(ctl.capabilities())
+
+# Let's check the current position.
+print(ctl.get_pos())
+
+# Ok, let's move it around.
+ctl.set_pos(123.0, 45.0)
+```

@@ -97,15 +97,26 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
 
     # get the first command
     index = 0
-    pos = positions[index]
+    pos = positions[index] # tuple of 3: [timestamp, az, el]
 
-    while datetime.now(timezone.utc) < timeout:
+    now = datetime.now(timezone.utc)
+    while now < timeout:
+
+        now = datetime.now(timezone.utc)
+
+        if index +1 < len(positions) and positions[index + 1][0] < now:
+            logging.warning(f"Skipping step {index} @ {pos[0]} "
+                             "(too old, the next step is more up to date).")
+            index = index + 1
+            pos = positions[index]
+            continue
+
         actual_az, actual_el = rotctld.get_pos()
-        actual.append([datetime.now(timezone.utc), actual_az, actual_el])
-        logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ "
-                       "{pos[0]} (in {pos[0]-datetime.now()})")
+        actual.append([now, actual_az, actual_el])
+        logging.debug(f"{now}: az={actual_az}, el={actual_el}, the next command @ "
+                      f"{pos[0]} (in {pos[0]-now})")
 
-        if pos[0] <= datetime.now(timezone.utc):
+        if pos[0] <= now:
 
             # normalize azimuth to -180;180, as this is what most rotctl rotators require.
             if pos[1]>180.0:
@@ -124,7 +135,9 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
                 return actual
             pos = positions[index]
 
-        time.sleep(delta)
+        if pos[0] > now:
+            logging.info(f"Sleeping for {pos[0] - now}")
+            time.sleep((pos[0] - now).total_seconds()) # This should be roughly equal to delta
 
     return actual
 

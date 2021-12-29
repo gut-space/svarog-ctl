@@ -6,6 +6,7 @@ import time
 
 import argparse
 import sys
+import signal
 import logging
 from datetime import datetime, timedelta, timezone
 from dateutil import parser as dateparser
@@ -14,6 +15,14 @@ from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
 from svarog_ctl import orbitdb, utils, passes, rotctld
+
+
+shutdown = False
+
+def signal_handler(signal, frame):
+    global shutdown
+    logging.info("Ctrl-c pressed. Aborting")
+    shutdown = True
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -99,18 +108,23 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     index = 0
     pos = positions[index] # tuple of 3: [timestamp, az, el]
 
+    global shutdown
+
     now = datetime.now(timezone.utc)
-    while now < timeout:
+    while now < timeout and not shutdown:
 
         now = datetime.now(timezone.utc)
 
-        if index +1 < len(positions) and positions[index + 1][0] < now:
+        # If it's not the last entry and the next one's timestamp is in the past,
+        # then we're running late and we should skip steps.
+        if index+1 < len(positions) and positions[index + 1][0] < now:
             logging.warning(f"Skipping step {index} @ {pos[0]} "
                              "(too old, the next step is more up to date).")
             index = index + 1
             pos = positions[index]
             continue
 
+        # Get the actual rotator position and remember it.
         actual_az, actual_el = rotctld.get_pos()
         actual.append([now, actual_az, actual_el])
         logging.debug(f"{now}: az={actual_az}, el={actual_el}, the next command @ "
@@ -130,8 +144,9 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
             if not status:
                 logging.warning(f"set_pos command failed. response={resp}")
             index = index + 1
+
             # If we gotten to the end of the list of commands, we're done here.
-            if index>len(positions):
+            if index>=len(positions):
                 return actual
             pos = positions[index]
 
@@ -146,6 +161,14 @@ def plot_charts(intended: list, actual: list):
        1. the intended antenna position over time (commands we're sending),
        2. the actual antenna position (as checked using get_pos command)."""
     pass
+
+def write_chart(pos: list, filename: str):
+    """Writes specified positions list to a file indicated by filename"""
+    with open(filename, 'w') as f:
+        for row in pos:
+            date_txt = row[0].strftime('%Y-%m-%d %H:%M:%S %z')
+            f.write(f"{date_txt}, {row[1]:.1f}, {row[2]:.1f}\n")
+    logging.info("Written %d lines to %s", len(pos), filename)
 
 def get_norad(tle: list) -> int:
     """Gets norad id from the TLE data."""
@@ -202,6 +225,8 @@ def main():
         print("ERROR: - specify the NORAD ID of the satellite, e.g. --satid 28654")
         sys.exit(1)
 
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     # First step is to get the orbit predictor. There are two options here.
     name = None
@@ -266,7 +291,10 @@ def main():
 
     antenna_pos = track_positions(positions, ctl, 3)
 
+    filename_base = f"{when.strftime('%Y-%m-%d--%H-%M')}-{name.replace(' ', '_')}"
     plot_charts(positions, antenna_pos)
+    write_chart(positions,   f"{filename_base}-intended.csv")
+    write_chart(antenna_pos, f"{filename_base}-actual.csv")
 
     ctl.close()
 

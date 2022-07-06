@@ -10,7 +10,7 @@ charset-normalizer==2.0.8
     # via requests
 idna==3.3
     # via requests
-numpy==1.21.4
+numpy==1.22.0
     # via orbit-predictor
 orbit-predictor==1.14.2
     # via -r requirements.in

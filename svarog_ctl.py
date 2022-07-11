@@ -16,7 +16,6 @@ from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
 from svarog_ctl import orbitdb, utils, passes, rotctld
 
-
 shutdown = False
 
 def signal_handler(signal, frame):
@@ -99,6 +98,8 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
        timestamp, azimuth, elevation)
     """
 
+    global shutdown
+
     actual = [] # actual rotator positions
 
     timeout = positions[-1][0] # The last entry specifies the last position and also
@@ -151,8 +152,13 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
             pos = positions[index]
 
         if pos[0] > now:
-            logging.info(f"Sleeping for {pos[0] - now}")
-            time.sleep((pos[0] - now).total_seconds()) # This should be roughly equal to delta
+            interval = pos[0] - now
+            logging.info(f"Sleeping for {interval} s")
+            for _ in range(int(interval.total_seconds())):
+                time.sleep(1) # This should be roughly equal to delta
+                if shutdown is True:
+                    logging.info("ctrl-c pressed, aborting.")
+                    return actual
 
     return actual
 
@@ -179,6 +185,11 @@ def main():
     """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
        call get_pass (which will return a list of az,el positions over time),
        then print it."""
+
+    # logging.basicConfig(filename = "logfile.log",
+    #                     stream = sys.stdout,
+    #                     filemode = "w",
+    #                     level = logging.DEBUG)
 
     parser = argparse.ArgumentParser(description="svarog-ctl: tracks satellite pass with rotator")
     parser.add_argument('--tle1', type=str, help="First line of the orbital data in TLE format")
@@ -299,4 +310,5 @@ def main():
     ctl.close()
 
 if __name__ == "__main__":
+
     main()

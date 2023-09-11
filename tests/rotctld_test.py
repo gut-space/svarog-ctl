@@ -4,6 +4,7 @@ from svarog_ctl.rotctld import Rotctld
 import unittest
 import time
 
+
 class RotctldTest(unittest.TestCase):
 
     rotctld_proc = None
@@ -16,8 +17,8 @@ class RotctldTest(unittest.TestCase):
 
     def tearDown(self):
 
-        self.rotctld_proc.send_signal(15) #sigterm
-        out, err = self.rotctld_proc.communicate(timeout=3) # try to kill it and wait 3 seconds.
+        self.rotctld_proc.send_signal(15)  # sigterm
+        out, err = self.rotctld_proc.communicate(timeout=3)  # try to kill it and wait 3 seconds.
 
     def test_ctor(self):
 
@@ -37,8 +38,8 @@ class RotctldTest(unittest.TestCase):
     def test_connect(self):
         r = Rotctld("127.0.0.1", 45033)
         m = r.connect()
-        self.assertEqual(m, "Dummy rotator") # make sure the rotctld reports the rotator type as dummy.
-                                             # That's because we started it with -m 1 (1 is a dummy rotator)
+        self.assertEqual(m, "Dummy rotator")  # make sure the rotctld reports the rotator type as dummy.
+        # That's because we started it with -m 1 (1 is a dummy rotator)
 
         print(f"returned model: [{m}]")
 
@@ -70,9 +71,9 @@ class RotctldTest(unittest.TestCase):
         self.assertTrue(len(caps))
 
         # strings we expect to see in the the response.
-        exp = [ "Caps dump for model:	1",
-                "Model name:		Dummy",
-                "Rot type:		Az-El"]
+        exp = ["Caps dump for model:	1",
+               "Model name:		Dummy",
+               "Rot type:		Az-El"]
 
         for e in exp:
             self.assertTrue(caps.find(e) != -1)

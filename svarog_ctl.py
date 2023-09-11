@@ -18,7 +18,9 @@ from svarog_ctl import orbitdb, utils, passes, rotctld
 
 shutdown = False
 
-def signal_handler(signal, frame):
+def signal_handler(_):
+    """Signal handler for ctrl-c. Sets the shutdown flag. Parameters passed (but ignored) are:
+       signal number and stack frame."""
     global shutdown
     logging.info("Ctrl-c pressed. Aborting")
     shutdown = True
@@ -49,6 +51,7 @@ def get_fake_pass(steps: int, start_az: int, end_az: int):
     return pos
 
 def get_timestamp_str(timestamp: datetime, timezone: tz.tz) -> str:
+    """Returns a string representation of the timestamp in the specified timezone."""
     return f"{timestamp.astimezone(timezone)} {timestamp.astimezone(timezone).tzname()}"
 
 def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,

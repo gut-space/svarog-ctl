@@ -3,8 +3,8 @@ from svarog_ctl import tle
 import pytest
 import unittest
 
-class PassesTest(unittest.TestCase):
 
+class PassesTest(unittest.TestCase):
 
     def test_db_stats(self):
 

@@ -3,14 +3,13 @@ name: Pylint
 on: [push]
 
 jobs:
-  build:
+  pylint:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
     - name: Install dependencies
@@ -18,6 +17,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
         pip install -r requirements.txt
-    - name: Analysing the code with pylint
+    - name: Linting code with pylint
       run: |
-        pylint --rcfile .pylintrc `ls *.py svarog_ctl/*.py|grep .py$|xargs`
+        pylint --rcfile .pylintrc $(git ls-files '*.py')

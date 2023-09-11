@@ -15,15 +15,16 @@ import socket
 from socket import AF_INET, SOCK_STREAM
 import logging
 
+
 class Rotctld:
     """ This is python 3 interface to the rotator controler rotctld, part of the excellent
         hamlib library. This class uses python logging."""
 
-    _connected : bool
-    _hostname : str
-    _port : int
+    _connected: bool
+    _hostname: str
+    _port: int
 
-    def __init__(self, hostname : str = "127.0.0.1", port : int = 4533, timeout : int = 3):
+    def __init__(self, hostname: str = "127.0.0.1", port: int = 4533, timeout: int = 3):
         """ Initializes the object, but does not do anything. Before sending any commands,
             please make sure you call connect() first. """
 
@@ -47,7 +48,7 @@ class Rotctld:
     def connect(self) -> str:
         """ Attempts to connect to rotctld. If the connection is established,
             it returns the rotator model as a string. """
-        self.sock.connect((self._hostname,self._port))
+        self.sock.connect((self._hostname, self._port))
         model = self.get_model()
         if model is None:
             # Timeout!
@@ -64,7 +65,7 @@ class Rotctld:
     def send_command(self, cmd: str):
         """ Send a command to the connected rotctld instance,
             and return the return value. """
-        if (cmd and len(cmd)>0 and cmd[-1] != '\n'):
+        if (cmd and len(cmd) > 0 and cmd[-1] != '\n'):
             cmd_safe = cmd + '\n'
         else:
             cmd_safe = cmd
@@ -74,7 +75,7 @@ class Rotctld:
         if resp is not None:
             resp = resp.decode().strip()
 
-        resp_txt = resp.replace("\n"," ")
+        resp_txt = resp.replace("\n", " ")
         logging.debug("Sent command [%s], received response [%s]", cmd, resp_txt)
         return resp
 
@@ -99,7 +100,7 @@ class Rotctld:
 
         return el
 
-    def set_pos(self,azimuth : float,elevation : float):
+    def set_pos(self, azimuth: float, elevation: float):
         """Command rotator to a particular azimuth/elevation.
            Returns a tuple of data (boolean, str), where the first one
            describes if the command was executed correctly and the second
@@ -113,7 +114,7 @@ class Rotctld:
         elevation = self.norm_el(elevation)
         azimuth = self.norm_az(azimuth)
 
-        command = "P %3.1f %2.1f" % (azimuth,elevation)
+        command = "P %3.1f %2.1f" % (azimuth, elevation)
         logging.debug(f"Setting position to {command}")
         resp = self.send_command(command)
         if "RPRT 0" in resp:

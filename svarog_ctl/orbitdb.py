@@ -19,14 +19,16 @@ from .configuration import open_config
 from .utils import url_to_filename
 
 TLE_SOURCES = [
-    "https://celestrak.com/NORAD/elements/active.txt" # Can be an url
+    "https://celestrak.com/NORAD/elements/active.txt"  # Can be an url
     # "file://local.txt" # can also be a local file
 ]
+
 
 def _get_create_time(path):
     stat = os.stat(path)
     ctime = stat.st_ctime
     return ctime
+
 
 def _is_in_source(source, sat_id):
     try:
@@ -35,13 +37,14 @@ def _is_in_source(source, sat_id):
     except LookupError:
         return False
 
+
 class OrbitDatabase:
     """
     OrbitDatabase is a simple database that downloads TLE orbital data from
     configurable Internet sources and local files.
     """
 
-    def __init__(self, urls=None, max_period=7*24*60*60):
+    def __init__(self, urls=None, max_period=7 * 24 * 60 * 60):
         self.max_period = max_period
         if urls is None:
             urls = TLE_SOURCES
@@ -54,7 +57,7 @@ class OrbitDatabase:
         cfg = open_config()
         logging.debug("Loaded config: %s", repr(cfg))
         self.datadir = os.path.join(cfg['datadir'] if 'datadir' in cfg else CONFIG_DIRECTORY, 'tle')
-        os.makedirs(self.datadir, exist_ok = True)
+        os.makedirs(self.datadir, exist_ok=True)
 
     def _get_tle_from_url(self, url):
         if url[:7] == "file://":
@@ -67,7 +70,7 @@ class OrbitDatabase:
                 logging.debug("Loaded %d bytes from file %s", len(content), fname)
                 return content
 
-        headers = { 'user-agent': APP_NAME + " " + VERSION, 'Accept': 'text/plain' }
+        headers = {'user-agent': APP_NAME + " " + VERSION, 'Accept': 'text/plain'}
         try:
             response = requests.get(url, headers=headers)
         except requests.exceptions.RequestException as error:
@@ -103,7 +106,7 @@ class OrbitDatabase:
 
         try:
             return self._fetch_tle_and_save(url, tle_path)
-        except:
+        except BaseException:
             if not force_fetch and tle_path_exists:
                 return tle_path
             raise
@@ -135,9 +138,9 @@ class OrbitDatabase:
 
         if all_sat_ids != found_sat_ids:
             raise LookupError("Could not find %s in orbit data." %
-                (", ".join(all_sat_ids.difference(found_sat_ids))))
+                              (", ".join(all_sat_ids.difference(found_sat_ids))))
 
-    def refresh_urls(self, force_fetch = False):
+    def refresh_urls(self, force_fetch=False):
         """Downloads all defined TLE information from TLE_SOURCES and other defined sources."""
         urls = self.urls
 
@@ -158,10 +161,10 @@ class OrbitDatabase:
         cnt = 0
         with open(file) as f:
             lines = f.readlines()
-        for i in range(int(len(lines) / 3) ):
-            name = lines[3*i].strip()
-            line1 = lines[3*i+1].strip()
-            line2 = lines[3*i+2].strip()
+        for i in range(int(len(lines) / 3)):
+            name = lines[3 * i].strip()
+            line1 = lines[3 * i + 1].strip()
+            line2 = lines[3 * i + 2].strip()
             self.add_tle(line1, line2, name)
             cnt += 1
         logging.info("Loaded %d TLEs.", cnt)
@@ -172,17 +175,17 @@ class OrbitDatabase:
         self.tle_names[name] = t
         self.tle_norad[t.norad] = t
 
-    def get_name(self, l: str) -> Tle:
+    def get_name(self, satname: str) -> Tle:
         """Attempts to return a TLE by its name, e.g. get_name("NOAA 18") """
-        return self.tle_names[l]
+        return self.tle_names[satname]
 
-    def get_norad(self, l: int) -> Tle:
+    def get_norad(self, norad_id: int) -> Tle:
         """Attempts to return a TLE by its norad number, e.g. get_name(12345) """
-        return self.tle_norad[l]
+        return self.tle_norad[norad_id]
 
-    def get_name_by_norad(self, l: int) -> str:
+    def get_name_by_norad(self, norad_id: int) -> str:
         """Attempts to return a sat name by its norad number"""
-        return self.get_norad(l).get_name()
+        return self.get_norad(norad_id).get_name()
 
     def count(self) -> int:
         """Returns number of currently loaded TLEs"""
@@ -202,7 +205,7 @@ class OrbitDatabase:
 
                 dt = datetime.timedelta(seconds=age)
                 data.append((url, "%s: %s ago" % ("Out-of-date" if out_of_date
-                                                                else "Current", str(dt))))
+                                                  else "Current", str(dt))))
             else:
                 data.append((url, "Not exists"))
 

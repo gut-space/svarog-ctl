@@ -23,7 +23,7 @@ class RotctldTest(unittest.TestCase):
     def test_ctor(self):
 
         # Valid instantiation, should not throw.
-        r = Rotctld("127.0.0.2", 3456)
+        Rotctld("127.0.0.2", 3456)
 
         # Invalid port, should throw.
         with pytest.raises(IndexError):

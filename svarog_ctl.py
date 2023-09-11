@@ -18,12 +18,14 @@ from svarog_ctl import orbitdb, utils, passes, rotctld
 
 shutdown = False
 
+
 def signal_handler(_):
     """Signal handler for ctrl-c. Sets the shutdown flag. Parameters passed (but ignored) are:
        signal number and stack frame."""
     global shutdown
     logging.info("Ctrl-c pressed. Aborting")
     shutdown = True
+
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -32,6 +34,7 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
        and no smoothing."""
 
     return passes.get_pass(pred, loc, aos, los, passes.PassAlgo.TIME_TICKS, 5)
+
 
 def get_fake_pass(steps: int, start_az: int, end_az: int):
     """Returns fake positions list. Useful for testing. The timing is always now..now+2 minutes.
@@ -42,36 +45,40 @@ def get_fake_pass(steps: int, start_az: int, end_az: int):
        start_az - starting azimuth
        end_az - ending azimuth"""
     pos = []
-    delta = (end_az - start_az) / (steps-1)
+    delta = (end_az - start_az) / (steps - 1)
     for x in range(steps):
-        pos.append([datetime.now() + timedelta(seconds=x), start_az + delta*x, 5.0])
+        pos.append([datetime.now() + timedelta(seconds=x), start_az + delta * x, 5.0])
 
     pos.append([datetime.now() + timedelta(seconds=120), 0, 0])
 
     return pos
 
+
 def get_timestamp_str(timestamp: datetime, timezone: tz.tz) -> str:
     """Returns a string representation of the timestamp in the specified timezone."""
     return f"{timestamp.astimezone(timezone)} {timestamp.astimezone(timezone).tzname()}"
 
+
 def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
-               zone: tz.tz):
+                zone: tz.tz):
     """Print the details of parameters used. Mostly for developer's convenience."""
     logging.info("Observer loc.: %s", utils.coords(loc.latitude_deg, loc.longitude_deg))
     logging.info("After time   : %s", get_timestamp_str(when, zone))
     logging.info("Next AOS     : %s", get_timestamp_str(pass_.aos, zone))
     logging.info("Next LOS     : %s", get_timestamp_str(pass_.los, zone))
     logging.info("Max elevation: %.1f deg at %s", pass_.max_elevation_deg,
-        str(pass_.max_elevation_date.astimezone(zone)))
+                 str(pass_.max_elevation_date.astimezone(zone)))
     logging.info("Duration     : %s", timedelta(seconds=pass_.duration_s))
 
     logging.debug(args)
+
 
 def print_pos(positions: list):
     """Prints the positions list. Useful for debugging."""
     print(f"---positions has {len(positions)} entries")
     for x in positions:
         print(f"utc={x[0]}, local={x[0].astimezone()}: az={x[1]:3.1f}, el={x[2]:03.1f}")
+
 
 def rewind_positions(positions: list) -> list:
     """This function rewinds (shifts positions) in time in a way that the pass will start now.
@@ -86,7 +93,8 @@ def rewind_positions(positions: list) -> list:
     """
 
     delta = positions[0][0] - datetime.now(timezone.utc)
-    return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
+    return list(map(lambda x: [x[0] - delta, x[1], x[2]], positions))
+
 
 def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     """This function sends commands to the rotator and tracks its position.
@@ -103,14 +111,14 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
 
     global shutdown
 
-    actual = [] # actual rotator positions
+    actual = []  # actual rotator positions
 
-    timeout = positions[-1][0] # The last entry specifies the last position and also
-                               # when to stop movement
+    timeout = positions[-1][0]  # The last entry specifies the last position and also
+    # when to stop movement
 
     # get the first command
     index = 0
-    pos = positions[index] # tuple of 3: [timestamp, az, el]
+    pos = positions[index]  # tuple of 3: [timestamp, az, el]
 
     global shutdown
 
@@ -121,9 +129,9 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
 
         # If it's not the last entry and the next one's timestamp is in the past,
         # then we're running late and we should skip steps.
-        if index+1 < len(positions) and positions[index + 1][0] < now:
+        if index + 1 < len(positions) and positions[index + 1][0] < now:
             logging.warning(f"Skipping step {index} @ {pos[0]} "
-                             "(too old, the next step is more up to date).")
+                            "(too old, the next step is more up to date).")
             index = index + 1
             pos = positions[index]
             continue
@@ -137,7 +145,7 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
         if pos[0] <= now:
 
             # normalize azimuth to -180;180, as this is what most rotctl rotators require.
-            if pos[1]>180.0:
+            if pos[1] > 180.0:
                 pos[1] = pos[1] - 360.0
 
             # Ok, it's time to execute the next command
@@ -150,7 +158,7 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
             index = index + 1
 
             # If we gotten to the end of the list of commands, we're done here.
-            if index>=len(positions):
+            if index >= len(positions):
                 return actual
             pos = positions[index]
 
@@ -158,18 +166,20 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
             interval = pos[0] - now
             logging.info(f"Sleeping for {interval} s")
             for _ in range(int(interval.total_seconds())):
-                time.sleep(1) # This should be roughly equal to delta
+                time.sleep(1)  # This should be roughly equal to delta
                 if shutdown is True:
                     logging.info("ctrl-c pressed, aborting.")
                     return actual
 
     return actual
 
+
 def plot_charts(intended: list, actual: list):
     """To be implemented: generate charts based on two series of data:
        1. the intended antenna position over time (commands we're sending),
        2. the actual antenna position (as checked using get_pos command)."""
     pass
+
 
 def write_chart(pos: list, filename: str):
     """Writes specified positions list to a file indicated by filename"""
@@ -179,10 +189,12 @@ def write_chart(pos: list, filename: str):
             f.write(f"{date_txt}, {row[1]:.1f}, {row[2]:.1f}\n")
     logging.info("Written %d lines to %s", len(pos), filename)
 
+
 def get_norad(tle: list) -> int:
     """Gets norad id from the TLE data."""
     _, line2 = tle
     return int(line2.split(" ")[1])
+
 
 def main():
     """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
@@ -198,32 +210,32 @@ def main():
     parser.add_argument('--tle1', type=str, help="First line of the orbital data in TLE format")
     parser.add_argument('--tle2', type=str, help="Second line of the orbital data in TLE format")
     parser.add_argument('--sat', type=str,
-        help="Name of the satellite (if local catalog is available)")
+                        help="Name of the satellite (if local catalog is available)")
     parser.add_argument('--satid', type=int,
-        help="Norad ID of the satellite (if local catalog is available)")
+                        help="Norad ID of the satellite (if local catalog is available)")
 
     parser.add_argument("--lat", type=float, required=True,
-        help="Specify the latitude of the observer in degrees, positive is northern hemisphere"
-             " (e.g. 53.3 represents 53.3N for Gdansk)")
+                        help="Specify the latitude of the observer in degrees, positive is northern hemisphere"
+                        " (e.g. 53.3 represents 53.3N for Gdansk)")
     parser.add_argument("--lon", type=float, required=True,
-        help="Specify the longitude of the observer in degrees, positive is easter hemisphere "
-             "(e.g. 18.5 represents 18.5E for Gdansk)")
+                        help="Specify the longitude of the observer in degrees, positive is easter hemisphere "
+                        "(e.g. 18.5 represents 18.5E for Gdansk)")
     parser.add_argument("--alt", default=0, type=int, required=False,
-        help="Observer's altitude, in meters above sea level")
+                        help="Observer's altitude, in meters above sea level")
 
     parser.add_argument("--time", default=str(datetime.now(timezone.utc)), type=str,
-        help="Specify the timestamp before the pass in UTC.")
+                        help="Specify the timestamp before the pass in UTC.")
 
     parser.add_argument("--host", default="127.0.0.1", type=str,
-        help="Specify how to connect (which hostname to use) to a running rotctld.")
+                        help="Specify how to connect (which hostname to use) to a running rotctld.")
     parser.add_argument("--port", default=4533, type=int,
-        help="Specify which port to connect to")
+                        help="Specify which port to connect to")
 
     parser.add_argument("--now", dest='now', action='store_const', const=True, default=False,
-        help="Don't wait for the actual pass, start now (useful for testing only)")
+                        help="Don't wait for the actual pass, start now (useful for testing only)")
 
     parser.add_argument("--local", dest='local_tz', action='store_const', const=True, default=False,
-        help="Use the local time zone, instead of the default UTC")
+                        help="Use the local time zone, instead of the default UTC")
 
     args = parser.parse_args()
 
@@ -238,7 +250,6 @@ def main():
         print("ERROR: - specify the satellite name, e.g. --sat 'NOAA 18'")
         print("ERROR: - specify the NORAD ID of the satellite, e.g. --satid 28654")
         sys.exit(1)
-
 
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -307,10 +318,11 @@ def main():
 
     filename_base = f"{when.strftime('%Y-%m-%d--%H-%M')}-{name.replace(' ', '_')}"
     plot_charts(positions, antenna_pos)
-    write_chart(positions,   f"{filename_base}-intended.csv")
+    write_chart(positions, f"{filename_base}-intended.csv")
     write_chart(antenna_pos, f"{filename_base}-actual.csv")
 
     ctl.close()
+
 
 if __name__ == "__main__":
 

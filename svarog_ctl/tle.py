@@ -2,11 +2,13 @@
 Class representing TLE
 """
 
+
 class Tle():
     """
     TLE class represents a TLE, Two Line Element that describes an Earth orbit.
     See https://en.wikipedia.org/wiki/Two-line_element_set
     """
+
     def __init__(self, line1: str, line2: str, line0: str = ""):
         self.set_line1(line1)
         self.set_line2(line2)
@@ -16,7 +18,7 @@ class Tle():
 
     def parse(self, line1: str, line2: str):
         """Parses the TLE lines"""
-        x1 = line1.split() # not used yet
+        x1 = line1.split()  # not used yet
         x2 = line2.split()
         self.id = int(x2[1])
 
@@ -24,7 +26,7 @@ class Tle():
             raise ValueError("First line of TLE (%s) malformed. Expected to start with '1'" % line1)
         if x2[0] != '2':
             raise ValueError("Second line of TLE (%s) malformed. Expected to start with '2'"
-            % line2)
+                             % line2)
 
         # many more fields to parse here
 

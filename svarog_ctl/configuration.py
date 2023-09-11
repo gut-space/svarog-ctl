@@ -8,6 +8,7 @@ import yaml
 
 from .globalvars import CONFIG_PATH
 
+
 def open_config():
     """
     Opens configuration file (typically ~/.appname/config.yaml, but please see
@@ -23,7 +24,7 @@ def open_config():
         print("WARNING: config file (%s) was missing, generated using template." % config_path)
 
     with open(config_path) as f:
-        return yaml.safe_load(f) # type: ignore
+        return yaml.safe_load(f)  # type: ignore
 
 
 def save_config(config):

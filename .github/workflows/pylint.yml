@@ -26,6 +26,7 @@ jobs:
         sudo apt install libhamlib-utils
         python -m pip install --upgrade pip
         python -m pip install pylint
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Analyse with pylint
       run: |
         pylint --rcfile .pylintrc `ls *.py svarog_ctl/*.py|grep .py$|xargs`

@@ -1,0 +1,8 @@
+name: pytest-3.11
+on: push
+
+jobs:
+  ubuntu-latest-build:
+    uses: ./.github/workflows/pytest-main.yml
+    with:
+      python-version: 3.11

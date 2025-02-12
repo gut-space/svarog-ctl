@@ -1,5 +1,11 @@
 # svarog-ctl
 
+![pylint](https://github.com/gut-space/svarog-ctl/actions/workflows/pylint.yml/badge.svg)
+![flake8](https://github.com/gut-space/svarog-ctl/actions/workflows/flake8.yml/badge.svg)
+![python 3.11](https://github.com/gut-space/svarog-ctl/actions/workflows/pytest-3.11.yml/badge.svg)
+![python 3.12](https://github.com/gut-space/svarog-ctl/actions/workflows/pytest-3.12.yml/badge.svg)
+![CodeQL](https://github.com/gut-space/svarog-ctl/actions/workflows/github-code-scanning/codeql/badge.svg)
+
 Svarog-ctl is a command-line driven automated satellite tracking software
 that uses `rotctld` to control antenna rotator to track satellites fly overs.
 
@@ -40,7 +46,9 @@ to follow the next pass after 18:44 on July 14th:
 --tle2 "2 44427  51.6376 177.8799 0003618 359.5888  93.1405 15.68562202115256"
 ```
 
-Alternatively, `svarog-ctl` can download TLE data from [Celestrak](https://celestrak.com/NORAD/elements/active.txt).
+Alternatively, `svarog-ctl` can download TLE data from Celestrak.org website.
+See the config.yml.template for direct link.
+
 If you need to provide additional or alternative sources, see `TLE_SOURCES` in
 https://github.com/gut-space/svarog-ctl/blob/master/svarog_ctl/orbitdb.py#L21
 This mode of operation requires Internet access. The downloaded data is cached

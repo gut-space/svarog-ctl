@@ -61,7 +61,7 @@ class OrbitDatabase:
             fname = self.datadir + os.path.sep + url[7:]
             logging.debug("Reading file [%s]", fname)
 
-            with open(fname, "r") as f:
+            with open(fname, "r", encoding="utf-8") as f:
                 content = f.read()
                 f.close()
                 logging.debug("Loaded %d bytes from file %s", len(content), fname)
@@ -69,7 +69,7 @@ class OrbitDatabase:
 
         headers = { 'user-agent': APP_NAME + " " + VERSION, 'Accept': 'text/plain' }
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=10)
         except requests.exceptions.RequestException as error:
             logging.error("Exception requesting TLE: %s", error)
             raise
@@ -79,7 +79,7 @@ class OrbitDatabase:
         logging.info("Downloading %s to local file %s", url, tle_path)
 
         content = self._get_tle_from_url(url)
-        with open(tle_path, "w") as f:
+        with open(tle_path, "w", encoding="utf-8") as f:
             f.write(content)
         return tle_path
 
@@ -115,7 +115,7 @@ class OrbitDatabase:
             source = NoradTLESource.from_file(path)
             if _is_in_source(source, name):
                 return source.get_predictor(name)
-        raise LookupError("Could not find %s in orbit data." % name)
+        raise LookupError(f"Could not find {name} in orbit data.")
 
     def refresh_satellites(self, sat_ids):
         """Refresh satellite info from remote sources and local files."""
@@ -134,8 +134,7 @@ class OrbitDatabase:
                     found_sat_ids.add(sat_id)
 
         if all_sat_ids != found_sat_ids:
-            raise LookupError("Could not find %s in orbit data." %
-                (", ".join(all_sat_ids.difference(found_sat_ids))))
+            raise LookupError(f"Could not find {', '.join(all_sat_ids.difference(found_sat_ids))} in orbit data.")
 
     def refresh_urls(self, force_fetch = False):
         """Downloads all defined TLE information from TLE_SOURCES and other defined sources."""
@@ -156,7 +155,7 @@ class OrbitDatabase:
            lot of TLE lines concatenated together."""
 
         cnt = 0
-        with open(file) as f:
+        with open(file, encoding="utf-8") as f:
             lines = f.readlines()
         for i in range(int(len(lines) / 3) ):
             name = lines[3*i].strip()
@@ -201,9 +200,8 @@ class OrbitDatabase:
                 age = now - creation_time
 
                 dt = datetime.timedelta(seconds=age)
-                data.append((url, "%s: %s ago" % ("Out-of-date" if out_of_date
-                                                                else "Current", str(dt))))
+                data.append((url, f"{('Out-of-date' if out_of_date else 'Current')}: {str(dt)} ago"))
             else:
                 data.append((url, "Not exists"))
 
-        return "\n".join("%s - %s" % (url, desc) for url, desc in data)
+        return "\n".join(f"{url} - {desc}" for url, desc in data)

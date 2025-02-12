@@ -15,8 +15,7 @@ class PassAlgo(Enum):
     DISTANCE = 2
     MAX_STEPS = 3
 
-# It's ok to have more than 5 arguments.
-# pylint: disable=R0913
+
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime,
              algo: PassAlgo, delta: float):
     """Returns position list for specified satellite (identified by predictor) for
@@ -62,6 +61,8 @@ def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: dateti
         d = (los - aos) / delta
     elif algo == PassAlgo.DISTANCE:
         d = timedelta(seconds = 1)
+    else:
+        raise ValueError(f"Unknown algorithm: {algo}")
 
     t = aos
     while t < los:

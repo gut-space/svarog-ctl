@@ -20,13 +20,13 @@ def open_config():
 
         template_dir = os.getcwd()
         shutil.copyfile(os.path.join(template_dir, 'config.yml.template'), config_path)
-        print("WARNING: config file (%s) was missing, generated using template." % config_path)
+        print(f"WARNING: config file ({config_path}) was missing, generated using template.")
 
-    with open(config_path) as f:
+    with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f) # type: ignore
 
 
 def save_config(config):
     """Saves the configuration back to config file on disk."""
-    with open(CONFIG_PATH, "w") as f:
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         return yaml.safe_dump(config, f)

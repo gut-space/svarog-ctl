@@ -18,7 +18,7 @@ if CONFIG_DIRECTORY is None:
     if DEV_ENVIRONMENT:
         CONFIG_DIRECTORY = os.path.abspath("./config")
     else:
-        CONFIG_DIRECTORY = os.path.expanduser("~/.config/%s" % (APP_NAME,))
+        CONFIG_DIRECTORY = os.path.expanduser(f"~/.config/{APP_NAME}")
 
 CONFIG_PATH = os.path.join(CONFIG_DIRECTORY, "config.yml")
 LOG_FILE = os.path.join(CONFIG_DIRECTORY, APP_NAME + ".log") if not DEV_ENVIRONMENT else None
@@ -33,7 +33,7 @@ LOGLEVEL = logging.INFO
 SHORT_LOG = True
 
 try:
-    with open(CONFIG_PATH) as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         config = yaml.safe_load(f) # type: ignore
         lv = config["logging"]["level"]
         LOGLEVEL = logging._nameToLevel[lv] # pylint: disable=protected-access
@@ -41,7 +41,7 @@ except IOError:
     pass
 
 try:
-    with open(CONFIG_PATH) as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         config = yaml.safe_load(f) # type: ignore
         LOG_FILE = os.path.expanduser(config["logging"]["file"])
 except IOError: # file not found, we don't care
@@ -52,7 +52,7 @@ except KeyError: # file found, but doesn't have logging/file key. We still don't
 if LOG_FILE == "stdout":
     LOG_FILE = None
 
-print("Logging on level %s to file %s" % (logging.getLevelName(LOGLEVEL), LOG_FILE))
+print(f"Logging on level {logging.getLevelName(LOGLEVEL)} to file {LOG_FILE}")
 
 if DEV_ENVIRONMENT:
     LOGLEVEL = logging.DEBUG

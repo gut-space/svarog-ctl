@@ -40,8 +40,9 @@ def get_fake_pass(steps: int, start_az: int, end_az: int):
 
     return pos
 
-def get_timestamp_str(timestamp: datetime, timezone: tz.tz) -> str:
-    return f"{timestamp.astimezone(timezone)} {timestamp.astimezone(timezone).tzname()}"
+def get_timestamp_str(timestamp: datetime, tz_info: tz.tz) -> str:
+    """Returns a string representation of a timestamp in the specified timezone."""
+    return f"{timestamp.astimezone(tz_info)} {timestamp.astimezone(tz_info).tzname()}"
 
 def log_details(loc: Location, args: argparse.Namespace, when: datetime, pass_,
                zone: tz.tz):
@@ -77,13 +78,13 @@ def rewind_positions(positions: list) -> list:
     delta = positions[0][0] - datetime.now(timezone.utc)
     return list(map(lambda x: [x[0]-delta,x[1],x[2]], positions))
 
-def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
+def track_positions(positions: list, rotator: rotctld.Rotctld, delta: int):
     """This function sends commands to the rotator and tracks its position.
 
        Parameters
        ==========
        positions - list of positions (tuples of 3 elements: timestamp, azimuth, elevation)
-       rotctld - an instance of open connection to the rotator
+       rotator - an instance of open connection to the rotator
        delta - step time in seconds (the loop will get the rotator position every delta seconds)
 
        returns a list of actual rotator positions over time (list of 3 elements tuples:
@@ -100,10 +101,10 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
     pos = positions[index]
 
     while datetime.now(timezone.utc) < timeout:
-        actual_az, actual_el = rotctld.get_pos()
+        actual_az, actual_el = rotator.get_pos()
         actual.append([datetime.now(timezone.utc), actual_az, actual_el])
-        logging.debug(f"{datetime.now()}: az={actual_az}, el={actual_el}, the next command @ "
-                       "{pos[0]} (in {pos[0]-datetime.now()})")
+        logging.debug("%s: az=%s, el=%s, the next command @ %s (in %s)",
+                      datetime.now(), actual_az, actual_el, pos[0], pos[0] - datetime.now())
 
         if pos[0] <= datetime.now(timezone.utc):
 
@@ -112,12 +113,12 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
                 pos[1] = pos[1] - 360.0
 
             # Ok, it's time to execute the next command
-            logging.info(f"{datetime.now()}: sending command to move to az={pos[1]:.1f}, "
-                         f"el={pos[2]:.1f}")
+            logging.info("%s: sending command to move to az=%.1f, el=%.1f",
+                         datetime.now(), pos[1], pos[2])
 
-            status, resp = rotctld.set_pos(pos[1], pos[2])
+            status, resp = rotator.set_pos(pos[1], pos[2])
             if not status:
-                logging.warning(f"set_pos command failed. response={resp}")
+                logging.warning("set_pos command failed. response=%s", resp)
             index = index + 1
             # If we gotten to the end of the list of commands, we're done here.
             if index>len(positions):
@@ -128,11 +129,12 @@ def track_positions(positions: list, rotctld: rotctld.Rotctld, delta: int):
 
     return actual
 
-def plot_charts(intended: list, actual: list):
+def plot_charts(_intended: list, _actual: list):
     """To be implemented: generate charts based on two series of data:
        1. the intended antenna position over time (commands we're sending),
-       2. the actual antenna position (as checked using get_pos command)."""
-    pass
+       2. the actual antenna position (as checked using get_pos command).
+    """
+    # Charting not implemented yet.
 
 def get_norad(tle: list) -> int:
     """Gets norad id from the TLE data."""
@@ -140,11 +142,11 @@ def get_norad(tle: list) -> int:
     return int(line2.split(" ")[1])
 
 def main():
-    """Example usage: get predictor for NOAA-18, define (hardcoded) observer,
-       call get_pass (which will return a list of az,el positions over time),
-       then print it."""
-
-    parser = argparse.ArgumentParser(description="svarog-ctl: tracks satellite pass with rotator")
+    """Parses command-line options and executes the satellite tracking routine."""
+    # pylint: disable=too-many-locals,too-many-statements
+    parser = argparse.ArgumentParser(
+        description="svarog-ctl: tracks satellite pass with rotator"
+    )
     parser.add_argument('--tle1', type=str, help="First line of the orbital data in TLE format")
     parser.add_argument('--tle2', type=str, help="Second line of the orbital data in TLE format")
     parser.add_argument('--sat', type=str,
@@ -209,7 +211,7 @@ def main():
             name = tle.get_name()
         elif args.sat is not None:
             name = args.sat
-        logging.debug(f"Looking for satellite {name}")
+        logging.debug("Looking for satellite %s", name)
         pred = db.get_predictor(name)
 
     # Need to extract norad id
@@ -242,13 +244,13 @@ def main():
 
     print_pos(positions)
 
-    logging.info(f"Connecting to {args.host}, port {args.port}")
+    logging.info("Connecting to %s, port %d", args.host, args.port)
 
     ctl = rotctld.Rotctld(args.host, args.port, 1)
     try:
         ctl.connect()
     except ConnectionRefusedError as e:
-        logging.critical(f"Failed to connect to rotctld: {str(e)}")
+        logging.critical("Failed to connect to rotctld: %s", str(e))
         sys.exit(-1)
 
     antenna_pos = track_positions(positions, ctl, 3)
@@ -256,6 +258,8 @@ def main():
     plot_charts(positions, antenna_pos)
 
     ctl.close()
+
+    logging.debug("Exiting main after completing tracking")
 
 if __name__ == "__main__":
     main()

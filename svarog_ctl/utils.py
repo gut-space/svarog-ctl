@@ -4,10 +4,10 @@ A collection of random utility functions.
 
 def coords(lat: float, lon: float, alt: float = None ) -> str:
     """Turn longitude, latitude into a printable string."""
-    txt = "%2.4f%s" % (abs(lat), "N" if lat>0 else "S")
-    txt += " %2.4f%s" % (abs(lon), "E" if lon>0 else "W")
+    txt = f"{abs(lat):2.4f}{'N' if lat>0 else 'S'} "
+    txt += f"{abs(lon):2.4f}{'E' if lon>0 else 'W'}"
     if alt:
-        txt += " %2.0fm" % alt
+        txt += f" {alt:2.0f}m"
     return txt
 
 def is_safe_filename_character(char: str) -> bool:

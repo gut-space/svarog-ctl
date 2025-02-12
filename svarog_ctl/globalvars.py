@@ -11,7 +11,7 @@ import yaml
 
 DEV_ENVIRONMENT =  os.environ.get("DEV_ENVIRONMENT") is not None
 APP_NAME = "svarog-ctl"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 CONFIG_DIRECTORY: str = os.environ.get("SVAROG_CONFIG_DIR") # type: ignore
 if CONFIG_DIRECTORY is None:
@@ -51,8 +51,8 @@ except KeyError: # file found, but doesn't have logging/file key. We still don't
 
 if LOG_FILE == "stdout":
     LOG_FILE = None
-
-print(f"Logging on level {logging.getLevelName(LOGLEVEL)} to file {LOG_FILE}")
+else:
+    print(f"Logging on level {logging.getLevelName(LOGLEVEL)} to file {LOG_FILE}")
 
 if DEV_ENVIRONMENT:
     LOGLEVEL = logging.DEBUG

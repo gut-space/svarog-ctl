@@ -14,6 +14,7 @@ from orbit_predictor.predictors.base import CartesianPredictor
 from orbit_predictor.locations import Location
 from orbit_predictor.sources import get_predictor_from_tle_lines
 from svarog_ctl import orbitdb, utils, passes, rotctld
+from svarog_ctl.globalvars import APP_NAME, VERSION
 
 def get_pass(pred: CartesianPredictor, loc: Location, aos: datetime, los: datetime):
     """Returns position list for specified satellite (identified by predictor) for
@@ -176,6 +177,8 @@ def main():
 
     parser.add_argument("--local", dest='local_tz', action='store_const', const=True, default=False,
         help="Use the local time zone, instead of the default UTC")
+
+    parser.add_argument("--version", action="version", version=f"{APP_NAME} {VERSION}")
 
     args = parser.parse_args()
 

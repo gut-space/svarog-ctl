@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="svarog_ctl",
-    version="0.1.0",
+    version="0.2.0",
     author="Tomek Mrugalski",
     author_email="spam.python@klub.com.pl",
     description="Automated satellite tracker that controls antenna rotors via rotctld",

@@ -8,7 +8,8 @@ class UtilsTest(unittest.TestCase):
 
     def test_url_to_filename(self):
         # Tests if URL can be properly converted to a filename
-        values = [ ['https://celestrak.com/NORAD/elements/active.txt', 'celestrak.com-NORAD-elements-active.txt'],
+        values = [ ['https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle',
+                    'celestrak.org-norad-elements-gp.php-group-active-format-tle'],
                 ['ftp://isc.org/foo.txt', 'isc.org-foo.txt'] ]
 
         for _, row in enumerate(values):

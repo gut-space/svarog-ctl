@@ -21,8 +21,8 @@ def safe_filename(filename: str, replacement: str="_") -> str:
 
 def url_to_filename(url: str) -> str:
     """Returns a filename based on URL"""
-    # First we need to get rid of the
+    # First we need to get rid of the protocol part
     safe = url[url.find("//")+2:]
     safe = safe_filename(safe, "-")
 
-    return safe
+    return safe.lower()

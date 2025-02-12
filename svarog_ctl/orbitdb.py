@@ -19,7 +19,7 @@ from .configuration import open_config
 from .utils import url_to_filename
 
 TLE_SOURCES = [
-    "https://celestrak.com/NORAD/elements/active.txt" # Can be an url
+    "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle" # Can be an url
     # "file://local.txt" # can also be a local file
 ]
 
@@ -30,7 +30,7 @@ def _get_create_time(path):
 
 def _is_in_source(source, sat_id):
     try:
-        source.get_tle(sat_id, datetime.datetime.utcnow())
+        source.get_tle(sat_id, datetime.datetime.now(datetime.timezone.utc))
         return True
     except LookupError:
         return False

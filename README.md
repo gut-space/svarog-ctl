@@ -5,6 +5,7 @@
 ![python 3.11](https://github.com/gut-space/svarog-ctl/actions/workflows/pytest-3.11.yml/badge.svg)
 ![python 3.12](https://github.com/gut-space/svarog-ctl/actions/workflows/pytest-3.12.yml/badge.svg)
 ![CodeQL](https://github.com/gut-space/svarog-ctl/actions/workflows/github-code-scanning/codeql/badge.svg)
+[![Coverage](https://coveralls.io/repos/github/gut-space/svarog-ctl/badge.svg?branch=master)](https://coveralls.io/github/gut-space/svarog-ctl?branch=master)
 
 Svarog-ctl is a command-line driven automated satellite tracking software
 that uses `rotctld` to control antenna rotator to track satellites fly overs.
